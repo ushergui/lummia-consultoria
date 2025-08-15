@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ titulo_pagina }} - LumIA Consultoria{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1>{{ titulo_pagina }}</h1>
+    </div>
+</div>
+
+<div class="container page-content">
+    <form method="post" enctype="multipart/form-data" class="styled-form">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="{{ form.titulo.id_for_label }}">Título</label>
+            {{ form.titulo }}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.conteudo.id_for_label }}">Conteúdo</label>
+            {{ form.conteudo }}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.imagem.id_for_label }}">Imagem de Capa</label>
+            {{ form.imagem }}
+            {% if form.instance.imagem %}
+                <p class="form-text">Imagem atual: <a href="{{ form.instance.imagem.url }}" target="_blank">{{ form.instance.imagem.name }}</a></p>
+            {% endif %}
+        </div>
+
+        <div class="form-actions">
+            <a href="{% url 'gerenciar_noticias' %}" class="btn btn-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-primary">Salvar</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

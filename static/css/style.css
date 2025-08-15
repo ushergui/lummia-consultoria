@@ -227,3 +227,116 @@ body {
     text-align: center;
     padding: 30px 0;
 }
+
+/* --- ESTILOS DE GERENCIAMENTO --- */
+.management-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.management-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    box-shadow: var(--shadow);
+    background: var(--white-color);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.management-table thead {
+    background-color: var(--primary-blue);
+    color: var(--white-color);
+}
+
+.management-table th, .management-table td {
+    padding: 15px;
+    text-align: left;
+}
+
+.management-table tbody tr {
+    border-bottom: 1px solid var(--border-color);
+}
+
+.management-table tbody tr:last-of-type {
+    border-bottom: none;
+}
+
+.management-table tbody tr:hover {
+    background-color: var(--light-bg);
+}
+
+.table-thumbnail {
+    width: 100px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 5px;
+}
+
+.btn-action {
+    display: inline-block;
+    padding: 8px 12px;
+    margin: 0 4px;
+    border-radius: 5px;
+    color: var(--white-color);
+    text-decoration: none;
+}
+
+.btn-edit { background-color: #0984e3; }
+.btn-delete { background-color: #d63031; }
+.btn-secondary { background-color: var(--light-text); color: var(--white-color); }
+.btn-danger { background-color: #d63031; color: var(--white-color); }
+
+.text-center { text-align: center; }
+.mt-4 { margin-top: 1.5rem; }
+
+/* --- FORMULÁRIOS --- */
+.styled-form {
+    max-width: 700px;
+    margin: 0 auto;
+    background: var(--white-color);
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--primary-blue);
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    font-size: 1rem;
+    font-family: 'Poppins', sans-serif;
+}
+
+.form-text {
+    margin-top: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--light-text);
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2rem;
+}

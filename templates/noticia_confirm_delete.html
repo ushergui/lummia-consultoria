@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Confirmar Exclusão - LumIA Consultoria{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1>Confirmar Exclusão</h1>
+    </div>
+</div>
+
+<div class="container page-content text-center">
+    <p>Você tem certeza que deseja deletar a notícia?</p>
+    <h3>"{{ noticia.titulo }}"</h3>
+    
+    <form method="post" class="mt-4">
+        {% csrf_token %}
+        <a href="{% url 'gerenciar_noticias' %}" class="btn btn-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-danger">Sim, tenho certeza</button>
+    </form>
+</div>
+{% endblock %}

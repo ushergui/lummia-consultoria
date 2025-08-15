@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gerenciar Notícias - LumIA Consultoria{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1>Gerenciamento de Notícias</h1>
+    </div>
+</div>
+
+<div class="container page-content">
+    <div class="management-header">
+        <p>Aqui você pode adicionar, editar ou remover as notícias exibidas na página inicial.</p>
+        <a href="{% url 'criar_noticia' %}" class="btn btn-primary"><i class="fas fa-plus"></i> Adicionar Notícia</a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="management-table">
+            <thead>
+                <tr>
+                    <th>Imagem</th>
+                    <th>Título</th>
+                    <th>Data de Publicação</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for noticia in noticias %}
+                <tr>
+                    <td><img src="{{ noticia.imagem.url }}" alt="{{ noticia.titulo }}" class="table-thumbnail"></td>
+                    <td data-label="Título">{{ noticia.titulo }}</td>
+                    <td data-label="Publicação">{{ noticia.data_publicacao|date:"d/m/Y H:i" }}</td>
+                    <td data-label="Ações">
+                        <a href="{% url 'editar_noticia' noticia.pk %}" class="btn-action btn-edit" title="Editar"><i class="fas fa-edit"></i></a>
+                        <a href="{% url 'deletar_noticia' noticia.pk %}" class="btn-action btn-delete" title="Deletar"><i class="fas fa-trash"></i></a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center">Nenhuma notícia cadastrada ainda.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
