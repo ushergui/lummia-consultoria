@@ -1,0 +1,16 @@
+# .gitignore
+# Ambientes Virtuais
+venv/
+.env
+
+# Arquivos de Cache do Python
+__pycache__/
+*.pyc
+
+# Arquivos de Banco de Dados (se usar sqlite para testes)
+*.sqlite3
+db.sqlite3
+
+# Arquivos de Mídia e Estáticos coletados
+/media/
+/staticfiles/
