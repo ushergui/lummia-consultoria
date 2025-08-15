@@ -1,0 +1,59 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Lummia Consultoria{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+</head>
+<body>
+    <div class="dashboard-grid">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="{% url 'index' %}">
+                    <img src="https://placehold.co/200x50/FFFFFF/0A3D62?text=Lummia&font=poppins" alt="Logo Lummia" class="logo">
+                </a>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <i class="fas fa-tachometer-alt"></i> Painel de Controle
+                </a>
+                
+                {% if user.tipo_perfil == 'ADMIN_CLIENTE' %}
+                <!-- ATUALIZAÇÃO: Adicione o link correto aqui -->
+                <a href="{% url 'gerenciar_usuarios' %}" class="{% if 'usuario' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-users"></i> Gerenciar Usuários
+                </a>
+                {% endif %}
+
+                <a href="#"><i class="fas fa-chart-line"></i> Ferramentas (Em breve)</a>
+            </nav>
+            <div class="sidebar-footer">
+                <form action="{% url 'logout' %}" method="post" style="width: 100%;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-logout">
+                        <i class="fas fa-sign-out-alt"></i> Sair
+                    </button>
+                </form>
+            </div>
+        </aside>
+        
+        <div class="dashboard-main">
+            <header class="dashboard-header">
+                <h1>{% block page_title %}{% endblock %}</h1>
+                <div class="user-profile">
+                    <span>{{ user.first_name|default:user.username }} ({{ user.get_tipo_perfil_display }})</span>
+                    <img src="https://i.pravatar.cc/45?u={{ user.username }}" alt="Avatar do Usuário">
+                </div>
+            </header>
+            <main class="dashboard-content">
+                {% block dashboard_content %}
+                {% endblock %}
+            </main>
+        </div>
+    </div>
+</body>
+</html>

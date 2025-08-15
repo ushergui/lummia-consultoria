@@ -34,7 +34,7 @@ INSTALLED_APPS = [
     # Nossos apps
     'core',
     'accounts',
-    
+    'gestao',    
 ]
 
 MIDDLEWARE = [
@@ -134,3 +134,10 @@ AUTH_USER_MODEL = 'accounts.CustomUser'
 # Configurações de Mídia (Uploads de Usuários)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
+# URL para onde o usuário é redirecionado após um login bem-sucedido
+LOGIN_REDIRECT_URL = 'dashboard'
+
+# URL para onde o usuário é redirecionado após o logout
+LOGOUT_REDIRECT_URL = 'index'

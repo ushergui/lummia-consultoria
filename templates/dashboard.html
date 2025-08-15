@@ -1,0 +1,52 @@
+{% extends 'base_dashboard.html' %}
+
+{% block title %}Dashboard - Lummia{% endblock %}
+
+{% block page_title %}Painel de Controle{% endblock %}
+
+{% block dashboard_content %}
+    
+    <!-- Conteúdo para ADMINISTRADOR -->
+    {% if user.tipo_perfil == 'ADMINISTRADOR' %}
+    <p>Você está vendo o painel de Administrador. Você tem acesso total ao sistema.</p>
+    <div class="widgets-grid" style="margin-top: 2rem;">
+        <div class="widget">
+            <h4>Total de Empresas</h4>
+            <p>0</p>
+        </div>
+        <div class="widget">
+            <h4>Total de Usuários</h4>
+            <p>0</p>
+        </div>
+    </div>
+    
+    <!-- Conteúdo para ADMIN_CLIENTE -->
+    {% elif user.tipo_perfil == 'ADMIN_CLIENTE' %}
+    <p>Você é o administrador da empresa <strong>{{ user.empresa.nome|default:"(Nenhuma empresa associada)" }}</strong>. Você pode gerenciar os usuários da sua equipe.</p>
+    <div class="widgets-grid" style="margin-top: 2rem;">
+        <div class="widget">
+            <h4>Usuários na sua Equipe</h4>
+            <p>0</p>
+        </div>
+        <div class="widget">
+            <h4>Ferramentas Ativas</h4>
+            <p>0</p>
+        </div>
+    </div>
+
+    <!-- Conteúdo para SERVIDOR_CLIENTE -->
+    {% elif user.tipo_perfil == 'SERVIDOR_CLIENTE' %}
+    <p>Bem-vindo(a) à plataforma da Lummia. Suas ferramentas estarão disponíveis aqui.</p>
+    <div class="widgets-grid" style="margin-top: 2rem;">
+        <div class="widget">
+            <h4>Ferramenta 1 (Em Breve)</h4>
+            <p>Análise Preditiva de Ocupação.</p>
+        </div>
+        <div class="widget">
+            <h4>Ferramenta 2 (Em Breve)</h4>
+            <p>Otimização de Escalas.</p>
+        </div>
+    </div>
+    {% endif %}
+
+{% endblock %}
