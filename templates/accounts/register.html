@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}Registrar Nova Conta{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1>Criar Nova Conta</h1>
+    </div>
+</div>
+
+<div class="container page-content">
+    <form method="post" class="styled-form">
+        {% csrf_token %}
+        
+        <!-- Renderiza os campos do formulário -->
+        {% for field in form %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                    <small class="form-text">{{ field.help_text }}</small>
+                {% endif %}
+                {% for error in field.errors %}
+                    <div class="alert alert-danger">{{ error }}</div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Registrar</button>
+        </div>
+        <div class="form-footer">
+            <p>Já tem uma conta? <a href="{% url 'login' %}">Faça o login</a></p>
+        </div>
+    </form>
+</div>
+{% endblock %}

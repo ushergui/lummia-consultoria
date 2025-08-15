@@ -2,9 +2,9 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-TF-8">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}LumIA Consultoria{% endblock %}</title>
+    <title>{% block title %}Lummia Consultoria{% endblock %}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
@@ -19,9 +19,16 @@
                 <a href="{% url 'index' %}">Início</a>
                 <a href="{% url 'sobre' %}">Sobre Nós</a>
                 <a href="{% url 'index' %}#news">Notícias</a>
-                <!-- Link para a nova área. Futuramente, vamos restringir o acesso a ele. -->
-                <a href="{% url 'gerenciar_noticias' %}">Gerenciar</a>
-                <button id="login-btn" class="btn btn-primary">Acessar Plataforma</button>
+                
+                {% if user.is_authenticated %}
+                    <!-- Opções para usuários LOGADOS -->
+                    <a href="{% url 'gerenciar_noticias' %}">Gerenciar Notícias</a>
+                    <a href="{% url 'dashboard' %}" class="btn btn-secondary">Meu Dashboard</a>
+                    <a href="{% url 'logout' %}" class="btn btn-primary">Sair</a>
+                {% else %}
+                    <!-- Opções para VISITANTES -->
+                    <a href="{% url 'login' %}" class="btn btn-primary">Acessar Plataforma</a>
+                {% endif %}
             </nav>
         </div>
     </header>
