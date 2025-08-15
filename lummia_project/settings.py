@@ -2,7 +2,7 @@
 
 import os
 from pathlib import Path
-from dotenv import load_dotenv # Importe a biblioteca dotenv
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -13,17 +13,16 @@ load_dotenv(os.path.join(BASE_DIR, ".env"))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
+# A chave secreta é lida do .env
 SECRET_KEY = os.getenv('SECRET_KEY')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# O modo DEBUG é controlado pela variável de ambiente. 'False' é o padrão.
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = []
-
+# Adicione seu domínio e, futuramente, o IP do servidor aqui
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1').split(',')
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -34,7 +33,7 @@ INSTALLED_APPS = [
     # Nossos apps
     'core',
     'accounts',
-    'gestao',    
+    'gestao',
 ]
 
 MIDDLEWARE = [
@@ -52,7 +51,7 @@ ROOT_URLCONF = 'lummia_project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')], # Adicione esta linha
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -106,11 +105,8 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
 LANGUAGE_CODE = 'pt-br'
-
 TIME_ZONE = 'America/Sao_Paulo'
-
 USE_I18N = True
-
 USE_TZ = True
 
 
@@ -118,26 +114,28 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = 'static/'
-
-# Adicione esta linha para dizer ao Django onde encontrar os arquivos estáticos globais
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
+# Diretório para onde o `collectstatic` irá copiar os arquivos estáticos para produção
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+
+# Media files (Uploads)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+
+# Auth settings
 AUTH_USER_MODEL = 'accounts.CustomUser'
-
-# Configurações de Mídia (Uploads de Usuários)
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-
-# URL para onde o usuário é redirecionado após um login bem-sucedido
 LOGIN_REDIRECT_URL = 'dashboard'
-
-# URL para onde o usuário é redirecionado após o logout
 LOGOUT_REDIRECT_URL = 'index'
+
+# Configuração de segurança para produção (quando DEBUG=False)
+CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', 'http://127.0.0.1').split(',')
