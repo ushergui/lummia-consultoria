@@ -30,6 +30,9 @@
                 <a href="{% url 'gerenciar_todos_usuarios' %}" class="{% if 'usuario_plataforma' in request.resolver_match.url_name %}active{% endif %}">
                     <i class="fas fa-users-cog"></i> Gerenciar Usuários
                 </a>
+                <a href="{% url 'gerenciar_ferramentas' %}" class="{% if 'ferramenta' in request.resolver_match.url_name and 'admin' in request.path %}active{% endif %}">
+                    <i class="fas fa-cogs"></i> Gerenciar Ferramentas
+                </a>
                 {% endif %}
 
                 <!-- Menu do Admin Cliente -->
@@ -39,7 +42,17 @@
                 </a>
                 {% endif %}
 
-                <a href="#"><i class="fas fa-chart-line"></i> Ferramentas (Em breve)</a>
+                <!-- Menu de Ferramentas Dinâmico (CORRIGIDO) -->
+                {% if user.empresa and user.empresa.ferramentas_contratadas.all %}
+                    <div class="menu-separator">
+                        <span>Ferramentas</span>
+                    </div>
+                    {% for ferramenta in user.empresa.ferramentas_contratadas.all %}
+                        <a href="{% url 'acessar_ferramenta' ferramenta_slug=ferramenta.slug %}" class="{% if request.resolver_match.kwargs.ferramenta_slug == ferramenta.slug %}active{% endif %}">
+                            <i class="fas fa-calculator"></i> {{ ferramenta.nome }}
+                        </a>
+                    {% endfor %}
+                {% endif %}
             </nav>
             <div class="sidebar-footer">
                 <form action="{% url 'logout' %}" method="post" style="width: 100%;">

@@ -15,4 +15,9 @@ urlpatterns = [
     path('admin/usuarios/', views.gerenciar_todos_usuarios_view, name='gerenciar_todos_usuarios'),
     path('admin/usuarios/novo/', views.criar_usuario_plataforma_view, name='criar_usuario_plataforma'),
     path('admin/usuarios/editar/<int:pk>/', views.editar_usuario_plataforma_view, name='editar_usuario_plataforma'),
+
+    # Novas URLs de Ferramentas
+    path('admin/ferramentas/', views.gerenciar_ferramentas_view, name='gerenciar_ferramentas'),
+    path('admin/ferramentas/nova/', views.criar_ferramenta_view, name='criar_ferramenta'),
+    path('admin/ferramentas/editar/<int:pk>/', views.editar_ferramenta_view, name='editar_ferramenta'),
 ]

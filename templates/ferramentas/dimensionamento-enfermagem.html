@@ -1,0 +1,150 @@
+{% extends 'base_dashboard.html' %}
+{% load static %}
+
+{% block title %}Dimensionamento de Enfermagem{% endblock %}
+{% block page_title %}Dimensionamento de Pessoal de Enfermagem{% endblock %}
+
+{% block dashboard_content %}
+<!-- Carrega o Tailwind CSS apenas para esta ferramenta -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Estilos específicos para a ferramenta -->
+<style>
+    /* Sobrescreve o fundo do body para a área de conteúdo */
+    body { background-color: #f3f4f6; }
+    .step { display: none; }
+    .step.active { display: block; }
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
+    ::-webkit-scrollbar-thumb:hover { background: #555; }
+</style>
+
+<div class="w-full bg-white rounded-2xl shadow-lg p-6 md:p-10 transition-all duration-500">
+    <header class="text-center mb-8">
+        <p class="text-gray-600 mt-2">Ferramenta baseada em referências normativas e teóricas</p>
+    </header>
+
+    <main>
+        <!-- Conteúdo da sua ferramenta (HTML) começa aqui -->
+        <div id="sector-selection" class="mb-6">
+            <label for="sector" class="block text-lg font-medium text-gray-700 mb-2">Selecione o Setor para Dimensionamento:</label>
+            <select id="sector" name="sector" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm">
+                <option value="ui">Unidade de Internação (UI)</option>
+                <option value="sm">Saúde Mental e Psiquiatria</option>
+                <option value="hd">Serviços de Hemodiálise</option>
+                <option value="cc">Centro Cirúrgico (Eletivas)</option>
+                <option value="cdi">Centro de Diagnóstico por Imagem (CDI)</option>
+                <option value="cme">Central de Material e Esterilização (CME)</option>
+                <option value="onco">Ambulatório de Oncologia e Hematologia</option>
+            </select>
+        </div>
+
+        <form id="calculation-form">
+            <!-- Unidade de Internação -->
+            <div id="form-ui" class="step active space-y-4">
+                <h2 class="text-2xl font-semibold text-indigo-700 border-b pb-2">Unidade de Internação</h2>
+                <div class="mt-4">
+                    <label for="ui-method" class="block text-sm font-medium text-gray-700">Selecione o Método de Cálculo:</label>
+                    <select id="ui-method" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm">
+                        <option value="cofen">Conforme Parecer Normativo COFEN Nº 01/2024</option>
+                        <option value="fugulin">Referencial Teórico (Fugulin et al., 2016)</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+                    <div>
+                        <label for="ui-leitos" class="block text-sm font-medium text-gray-700">Nº de Leitos (informativo)</label>
+                        <input type="number" id="ui-leitos" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Ex: 40">
+                    </div>
+                    <div>
+                        <label for="ui-ocupacao" class="block text-sm font-medium text-gray-700">Taxa de Ocupação (%)</label>
+                        <input type="number" id="ui-ocupacao" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Ex: 80">
+                    </div>
+                </div>
+                <p class="font-medium text-gray-800 pt-2">Nº de Pacientes (média diária) por Grau de Dependência:</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div><label for="ui-pcm" class="block text-sm font-medium text-gray-700">Cuidado Mínimo (PCM)</label><input type="number" id="ui-pcm" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="0"></div>
+                    <div><label for="ui-pci" class="block text-sm font-medium text-gray-700">Cuidado Intermediário (PCI)</label><input type="number" id="ui-pci" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="0"></div>
+                    <div><label for="ui-pcad" class="block text-sm font-medium text-gray-700">Alta Dependência (PCAD)</label><input type="number" id="ui-pcad" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="0"></div>
+                    <div><label for="ui-pcsi" class="block text-sm font-medium text-gray-700">Semi-Intensivo (PCSI)</label><input type="number" id="ui-pcsi" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="0"></div>
+                    <div><label for="ui-pcit" class="block text-sm font-medium text-gray-700">Intensivo (PCIt)</label><input type="number" id="ui-pcit" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="0"></div>
+                </div>
+            </div>
+
+            <!-- Outros setores (Saúde Mental, Hemodiálise, etc.) -->
+            <!-- Cole o restante do seu HTML dos outros formulários aqui -->
+            <!-- ... -->
+
+            <!-- Carga Horária e Botões (Comum a todos) -->
+            <div class="mt-6 border-t pt-6">
+                <label for="chs" class="block text-lg font-medium text-gray-700">Carga Horária Semanal (CHS)</label>
+                <input type="number" id="chs" class="mt-1 block w-full md:w-1/2 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Ex: 30, 36 ou 40">
+            </div>
+            <div class="mt-8 flex justify-end space-x-4">
+                <button type="button" id="reset-btn" class="px-6 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Limpar</button>
+                <button type="submit" id="calculate-btn" class="px-8 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Calcular</button>
+            </div>
+        </form>
+
+        <div id="result-area" class="mt-10 p-6 bg-indigo-50 rounded-lg border border-indigo-200 hidden">
+            <h2 class="text-2xl font-semibold text-indigo-800 mb-4">Resultado do Dimensionamento</h2>
+            <div id="result-content" class="space-y-3 text-lg text-gray-700"></div>
+        </div>
+        <div id="error-message" class="mt-6 p-4 bg-red-100 text-red-700 rounded-md hidden"></div>
+    </main>
+</div>
+
+<!-- Seu JavaScript original -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Cole todo o seu código JavaScript aqui, sem a tag <script> externa
+        // ...
+    });
+</script>
+{% endblock %}
+```
+**Instrução:** Copie e cole todo o conteúdo do seu arquivo HTML original dentro deste template, incluindo o JavaScript no final, conforme indicado.
+
+---
+
+### **Passo 3: Tornando o Menu de Ferramentas Dinâmico**
+
+Vamos fazer o menu lateral do dashboard mostrar apenas as ferramentas que a empresa do usuário contratou.
+
+Edite o arquivo `templates/base_dashboard.html`:
+
+
+```html
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<!-- ... (head e início do body) ... -->
+<body>
+    <div class="dashboard-grid">
+        <aside class="sidebar">
+            <!-- ... (sidebar-header) ... -->
+            <nav class="sidebar-nav">
+                <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <i class="fas fa-tachometer-alt"></i> Painel de Controle
+                </a>
+                
+                <!-- ... (Menus de Admin) ... -->
+
+                <!-- Menu de Ferramentas Dinâmico -->
+                {% if user.empresa and user.empresa.ferramentas_contratadas.all %}
+                    <div class="menu-separator">
+                        <span>Ferramentas</span>
+                    </div>
+                    {% for ferramenta in user.empresa.ferramentas_contratadas.all %}
+                        <a href="{% url 'ferramenta_'|add:ferramenta.slug %}" class="{% if request.resolver_match.url_name == 'ferramenta_'|add:ferramenta.slug %}active{% endif %}">
+                            <i class="fas fa-calculator"></i> {{ ferramenta.nome }}
+                        </a>
+                    {% endfor %}
+                {% endif %}
+            </nav>
+            <!-- ... (sidebar-footer) ... -->
+        </aside>
+        <!-- ... (resto do arquivo) ... -->
+    </div>
+</body>
+</html>

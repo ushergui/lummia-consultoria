@@ -3,10 +3,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from accounts.decorators import admin_cliente_required, administrador_required
 from accounts.models import CustomUser
-from .models import Empresa
+from .models import Empresa, Ferramenta
 from .forms import (
     AdicionarUsuarioForm, EditarUsuarioForm, EmpresaForm, 
-    AdminCriaUsuarioForm, AdminEditaUsuarioForm
+    AdminCriaUsuarioForm, AdminEditaUsuarioForm, FerramentaForm
 )
 
 # --- Views do Admin da Plataforma ---
@@ -112,3 +112,36 @@ def editar_usuario_view(request, pk):
         form = EditarUsuarioForm(instance=usuario_para_editar)
     context = {'form': form, 'titulo_pagina': f'Editar Usuário: {usuario_para_editar.get_full_name()}'}
     return render(request, 'gestao/usuario_form.html', context)
+
+# --- Views do Admin da Plataforma ---
+
+@login_required
+@administrador_required
+def gerenciar_ferramentas_view(request):
+    ferramentas = Ferramenta.objects.all()
+    return render(request, 'gestao/gerenciar_ferramentas.html', {'ferramentas': ferramentas})
+
+@login_required
+@administrador_required
+def criar_ferramenta_view(request):
+    if request.method == 'POST':
+        form = FerramentaForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('gerenciar_ferramentas')
+    else:
+        form = FerramentaForm()
+    return render(request, 'gestao/ferramenta_form.html', {'form': form, 'titulo_pagina': 'Adicionar Nova Ferramenta'})
+
+@login_required
+@administrador_required
+def editar_ferramenta_view(request, pk):
+    ferramenta = get_object_or_404(Ferramenta, pk=pk)
+    if request.method == 'POST':
+        form = FerramentaForm(request.POST, instance=ferramenta)
+        if form.is_valid():
+            form.save()
+            return redirect('gerenciar_ferramentas')
+    else:
+        form = FerramentaForm(instance=ferramenta)
+    return render(request, 'gestao/ferramenta_form.html', {'form': form, 'titulo_pagina': f'Editar Ferramenta: {ferramenta.nome}'})

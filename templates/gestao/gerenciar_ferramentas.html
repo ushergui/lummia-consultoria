@@ -1,0 +1,36 @@
+{% extends 'base_dashboard.html' %}
+
+{% block title %}Gerenciar Ferramentas{% endblock %}
+{% block page_title %}Gerenciar Ferramentas da Plataforma{% endblock %}
+
+{% block dashboard_content %}
+<div class="management-header">
+    <p>Adicione ou edite as ferramentas disponíveis para as empresas.</p>
+    <a href="{% url 'criar_ferramenta' %}" class="btn btn-primary"><i class="fas fa-plus"></i> Adicionar Ferramenta</a>
+</div>
+
+<div class="table-responsive">
+    <table class="management-table">
+        <thead>
+            <tr>
+                <th>Nome da Ferramenta</th>
+                <th>Slug (URL)</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ferramenta in ferramentas %}
+            <tr>
+                <td>{{ ferramenta.nome }}</td>
+                <td>{{ ferramenta.slug }}</td>
+                <td>
+                    <a href="{% url 'editar_ferramenta' ferramenta.pk %}" class="btn-action btn-edit" title="Editar"><i class="fas fa-edit"></i></a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" class="text-center">Nenhuma ferramenta cadastrada.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

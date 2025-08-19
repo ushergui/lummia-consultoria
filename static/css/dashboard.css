@@ -104,3 +104,11 @@ body {
     border-radius: 50%;
     border: 2px solid var(--primary-blue);
 }
+
+.menu-separator {
+    padding: 15px 20px 5px;
+    color: #a0a0a0;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    font-weight: 600;
+}

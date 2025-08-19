@@ -1,0 +1,23 @@
+{% extends 'base_dashboard.html' %}
+
+{% block title %}{{ titulo_pagina }}{% endblock %}
+{% block page_title %}{{ titulo_pagina }}{% endblock %}
+
+{% block dashboard_content %}
+<form method="post" class="styled-form">
+    {% csrf_token %}
+    {% for field in form %}
+        <div class="form-group">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}
+                <small class="form-text" style="color: #6c757d; font-size: 0.8em;">{{ field.help_text }}</small>
+            {% endif %}
+        </div>
+    {% endfor %}
+    <div class="form-actions">
+        <a href="{% url 'gerenciar_ferramentas' %}" class="btn btn-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-primary">Salvar</button>
+    </div>
+</form>
+{% endblock %}
