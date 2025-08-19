@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ noticia.titulo }} - Lummia Consultoria{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <!-- Título da notícia no cabeçalho -->
+        <h1>{{ noticia.titulo }}</h1>
+    </div>
+</div>
+
+<div class="container page-content" style="max-width: 800px; margin: 0 auto;">
+    <article>
+        <!-- Data de Publicação -->
+        <p class="text-muted" style="color: #6c757d; margin-bottom: 2rem;">
+            Publicado em {{ noticia.data_publicacao|date:"d \d\e F \d\e Y" }}
+        </p>
+
+        <!-- Imagem da Notícia -->
+        {% if noticia.imagem %}
+            <img src="{{ noticia.imagem.url }}" alt="{{ noticia.titulo }}" style="width: 100%; height: auto; border-radius: 12px; margin-bottom: 2rem;">
+        {% endif %}
+
+        <!-- Conteúdo da Notícia -->
+        <div class="noticia-content" style="line-height: 1.8; font-size: 1.1rem;">
+            <!-- O |linebreaksbr converte quebras de linha em <br> -->
+            {{ noticia.conteudo|linebreaksbr }}
+        </div>
+
+        <!-- Botão para voltar -->
+        <div style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #dee2e6;">
+            <a href="{% url 'index' %}#news" class="btn btn-secondary">Voltar para Notícias</a>
+        </div>
+    </article>
+</div>
+{% endblock %}

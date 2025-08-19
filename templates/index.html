@@ -29,7 +29,7 @@
                     <!-- Mostra apenas um trecho do conteúdo (20 primeiras palavras) -->
                     <p>{{ noticia.conteudo|truncatewords:20 }}</p>
                     <!-- Futuramente, podemos criar uma página de detalhe da notícia -->
-                    <a href="#">Leia mais &rarr;</a>
+                    <a href="{% url 'noticia_detalhe' noticia.pk %}" class="leia-mais-link">Leia mais &rarr;</a>
                 </div>
             </article>
             {% empty %}

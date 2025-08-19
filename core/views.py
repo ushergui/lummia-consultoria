@@ -15,6 +15,17 @@ def sobre(request):
     context = {}
     return render(request, 'sobre.html', context)
 
+# --- NOVA VIEW ADICIONADA ---
+def noticia_detalhe_view(request, pk):
+    """
+    Exibe uma única notícia completa.
+    """
+    noticia = get_object_or_404(Noticia, pk=pk)
+    context = {
+        'noticia': noticia
+    }
+    return render(request, 'noticia_detalhe.html', context)
+
 # --- Views de Gerenciamento (AGORA PROTEGIDAS) ---
 
 @login_required

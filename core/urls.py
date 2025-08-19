@@ -6,6 +6,7 @@ urlpatterns = [
     # URLs públicas
     path('', views.index, name='index'),
     path('sobre/', views.sobre, name='sobre'),
+    path('noticia/<int:pk>/', views.noticia_detalhe_view, name='noticia_detalhe'),
     
     # URLs de Gerenciamento de Notícias
     path('gerenciar/noticias/', views.gerenciar_noticias, name='gerenciar_noticias'),
