@@ -1,0 +1,36 @@
+{% extends 'base_dashboard.html' %}
+
+{% block title %}Gerenciar Empresas{% endblock %}
+{% block page_title %}Gerenciar Empresas{% endblock %}
+
+{% block dashboard_content %}
+<div class="management-header">
+    <p>Adicione ou edite as empresas clientes da plataforma.</p>
+    <a href="{% url 'criar_empresa' %}" class="btn btn-primary"><i class="fas fa-plus"></i> Adicionar Empresa</a>
+</div>
+
+<div class="table-responsive">
+    <table class="management-table">
+        <thead>
+            <tr>
+                <th>Nome da Empresa</th>
+                <th>CNPJ</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for empresa in empresas %}
+            <tr>
+                <td>{{ empresa.nome }}</td>
+                <td>{{ empresa.cnpj }}</td>
+                <td>
+                    <a href="{% url 'editar_empresa' empresa.pk %}" class="btn-action btn-edit" title="Editar"><i class="fas fa-edit"></i></a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" class="text-center">Nenhuma empresa cadastrada.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

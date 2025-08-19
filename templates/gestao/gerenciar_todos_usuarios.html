@@ -1,0 +1,42 @@
+{% extends 'base_dashboard.html' %}
+
+{% block title %}Gerenciar Todos os Usuários{% endblock %}
+{% block page_title %}Gerenciar Todos os Usuários{% endblock %}
+
+{% block dashboard_content %}
+<div class="management-header">
+    <p>Gerencie todos os usuários da plataforma.</p>
+    <a href="{% url 'criar_usuario_plataforma' %}" class="btn btn-primary"><i class="fas fa-plus"></i> Adicionar Usuário</a>
+</div>
+
+<div class="table-responsive">
+    <table class="management-table">
+        <thead>
+            <tr>
+                <th>Usuário</th>
+                <th>Nome Completo</th>
+                <th>Empresa</th>
+                <th>Perfil</th>
+                <th>Ativo</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for usuario in usuarios %}
+            <tr>
+                <td>{{ usuario.username }}</td>
+                <td>{{ usuario.get_full_name }}</td>
+                <td>{{ usuario.empresa.nome|default:"-" }}</td>
+                <td>{{ usuario.get_tipo_perfil_display }}</td>
+                <td>{% if usuario.is_active %}<i class="fas fa-check-circle" style="color: green;"></i>{% else %}<i class="fas fa-times-circle" style="color: red;"></i>{% endif %}</td>
+                <td>
+                    <a href="{% url 'editar_usuario_plataforma' usuario.pk %}" class="btn-action btn-edit" title="Editar"><i class="fas fa-edit"></i></a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="6" class="text-center">Nenhum usuário encontrado.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
