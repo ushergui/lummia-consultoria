@@ -5,146 +5,558 @@
 {% block page_title %}Dimensionamento de Pessoal de Enfermagem{% endblock %}
 
 {% block dashboard_content %}
-<!-- Carrega o Tailwind CSS apenas para esta ferramenta -->
 <script src="https://cdn.tailwindcss.com"></script>
 
-<!-- Estilos específicos para a ferramenta -->
 <style>
-    /* Sobrescreve o fundo do body para a área de conteúdo */
-    body { background-color: #f3f4f6; }
     .step { display: none; }
-    .step.active { display: block; }
-    ::-webkit-scrollbar { width: 8px; }
-    ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
-    ::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
-    ::-webkit-scrollbar-thumb:hover { background: #555; }
+    .step.active { display: block; animation: fadeIn 0.5s; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .area-card, .method-card { transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; }
+    .area-card:hover, .method-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+    #back-button-container { display: none; }
+    .method-btn.selected { background-color: #4f46e5; color: white; border-color: #4f46e5; }
+    
+    /* Estilos para Acordeão do NAS */
+    .nas-accordion-header { cursor: pointer; }
+    .nas-accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+    .nas-item { border-bottom: 1px solid #e5e7eb; padding-bottom: 0.75rem; margin-bottom: 0.75rem; }
+    .nas-item:last-child { border-bottom: none; }
 </style>
 
 <div class="w-full bg-white rounded-2xl shadow-lg p-6 md:p-10 transition-all duration-500">
     <header class="text-center mb-8">
-        <p class="text-gray-600 mt-2">Ferramenta baseada em referências normativas e teóricas</p>
+        <p class="text-gray-600 mt-2">Ferramenta atualizada conforme Parecer Normativo COFEN Nº 1/2024.</p>
     </header>
 
-    <main>
-        <!-- Conteúdo da sua ferramenta (HTML) começa aqui -->
-        <div id="sector-selection" class="mb-6">
-            <label for="sector" class="block text-lg font-medium text-gray-700 mb-2">Selecione o Setor para Dimensionamento:</label>
-            <select id="sector" name="sector" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm">
-                <option value="ui">Unidade de Internação (UI)</option>
-                <option value="sm">Saúde Mental e Psiquiatria</option>
-                <option value="hd">Serviços de Hemodiálise</option>
-                <option value="cc">Centro Cirúrgico (Eletivas)</option>
-                <option value="cdi">Centro de Diagnóstico por Imagem (CDI)</option>
-                <option value="cme">Central de Material e Esterilização (CME)</option>
-                <option value="onco">Ambulatório de Oncologia e Hematologia</option>
-            </select>
+    <main id="dimensionamento-container">
+        <div id="step-1" class="step active">
+            <h2 class="text-2xl font-semibold text-center text-gray-800 mb-6">1. Selecione a área de atuação</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div id="select-hospitalar" class="area-card cursor-pointer p-6 bg-blue-50 border-2 border-blue-200 rounded-lg text-center">
+                    <i class="fas fa-hospital-user text-4xl text-blue-500 mb-3"></i>
+                    <h3 class="text-xl font-bold text-blue-800">Atenção Hospitalar</h3>
+                    <p class="text-gray-600 text-sm mt-1">UTIs, Unidades de Internação, Centro Cirúrgico, CME, etc.</p>
+                </div>
+                <div id="select-ambulatorial" class="area-card cursor-pointer p-6 bg-green-50 border-2 border-green-200 rounded-lg text-center">
+                    <i class="fas fa-clinic-medical text-4xl text-green-500 mb-3"></i>
+                    <h3 class="text-xl font-bold text-green-800">Atenção Ambulatorial</h3>
+                    <p class="text-gray-600 text-sm mt-1">Hemodiálise, Quimioterapia, CDI, etc.</p>
+                </div>
+                <div id="select-primaria" class="area-card cursor-pointer p-6 bg-purple-50 border-2 border-purple-200 rounded-lg text-center">
+                    <i class="fas fa-users text-4xl text-purple-500 mb-3"></i>
+                    <h3 class="text-xl font-bold text-purple-800">Atenção Primária</h3>
+                    <p class="text-gray-600 text-sm mt-1">Estratégia de Saúde da Família (ESF).</p>
+                </div>
+            </div>
         </div>
 
-        <form id="calculation-form">
-            <!-- Unidade de Internação -->
-            <div id="form-ui" class="step active space-y-4">
-                <h2 class="text-2xl font-semibold text-indigo-700 border-b pb-2">Unidade de Internação</h2>
-                <div class="mt-4">
-                    <label for="ui-method" class="block text-sm font-medium text-gray-700">Selecione o Método de Cálculo:</label>
-                    <select id="ui-method" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm">
-                        <option value="cofen">Conforme Parecer Normativo COFEN Nº 01/2024</option>
-                        <option value="fugulin">Referencial Teórico (Fugulin et al., 2016)</option>
-                    </select>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-                    <div>
-                        <label for="ui-leitos" class="block text-sm font-medium text-gray-700">Nº de Leitos (informativo)</label>
-                        <input type="number" id="ui-leitos" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Ex: 40">
+        <div id="step-2" class="step">
+            <div class="flex justify-start mb-6" id="back-button-container">
+                 <button type="button" id="back-button" class="px-6 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"><i class="fas fa-arrow-left mr-2"></i>Voltar</button>
+            </div>
+            <h2 class="text-2xl font-semibold text-center text-gray-800 mb-6">2. Selecione o setor específico</h2>
+            <div class="max-w-lg mx-auto">
+                <label for="sector-select" class="block text-lg font-medium text-gray-700 mb-2">Setor:</label>
+                <select id="sector-select" class="mt-1 block w-full pl-3 pr-10 py-3 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-lg rounded-md shadow-sm"></select>
+            </div>
+        </div>
+        
+        <div id="step-3" class="step">
+            <form id="calculation-form">
+                <div id="form-content" class="space-y-6"></div>
+                <div class="mt-8 border-t pt-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="chs" class="block text-sm font-medium text-gray-700">Carga Horária Semanal (CHS) por profissional</label>
+                            <input type="number" id="chs" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Ex: 30, 36 ou 40" required>
+                        </div>
+                        <div>
+                            <label for="ist" class="block text-sm font-medium text-gray-700">Índice de Segurança Técnica (IST %)</label>
+                            <input type="number" id="ist" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="15" required title="Mínimo de 15% conforme COFEN. Inclui férias, ausências e folgas.">
+                        </div>
                     </div>
-                    <div>
-                        <label for="ui-ocupacao" class="block text-sm font-medium text-gray-700">Taxa de Ocupação (%)</label>
-                        <input type="number" id="ui-ocupacao" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Ex: 80">
+                </div>
+
+                <div class="mt-8 flex justify-between items-center">
+                     <button type="button" id="back-button-step3" class="px-6 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"><i class="fas fa-arrow-left mr-2"></i>Voltar</button>
+                    <div class="space-x-4">
+                        <button type="button" id="reset-btn" class="px-6 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">Limpar</button>
+                        <button type="submit" id="calculate-btn" class="px-8 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">Calcular</button>
                     </div>
                 </div>
-                <p class="font-medium text-gray-800 pt-2">Nº de Pacientes (média diária) por Grau de Dependência:</p>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div><label for="ui-pcm" class="block text-sm font-medium text-gray-700">Cuidado Mínimo (PCM)</label><input type="number" id="ui-pcm" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="0"></div>
-                    <div><label for="ui-pci" class="block text-sm font-medium text-gray-700">Cuidado Intermediário (PCI)</label><input type="number" id="ui-pci" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="0"></div>
-                    <div><label for="ui-pcad" class="block text-sm font-medium text-gray-700">Alta Dependência (PCAD)</label><input type="number" id="ui-pcad" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="0"></div>
-                    <div><label for="ui-pcsi" class="block text-sm font-medium text-gray-700">Semi-Intensivo (PCSI)</label><input type="number" id="ui-pcsi" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="0"></div>
-                    <div><label for="ui-pcit" class="block text-sm font-medium text-gray-700">Intensivo (PCIt)</label><input type="number" id="ui-pcit" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" value="0"></div>
-                </div>
-            </div>
+            </form>
+        </div>
 
-            <!-- Outros setores (Saúde Mental, Hemodiálise, etc.) -->
-            <!-- Cole o restante do seu HTML dos outros formulários aqui -->
-            <!-- ... -->
-
-            <!-- Carga Horária e Botões (Comum a todos) -->
-            <div class="mt-6 border-t pt-6">
-                <label for="chs" class="block text-lg font-medium text-gray-700">Carga Horária Semanal (CHS)</label>
-                <input type="number" id="chs" class="mt-1 block w-full md:w-1/2 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Ex: 30, 36 ou 40">
-            </div>
-            <div class="mt-8 flex justify-end space-x-4">
-                <button type="button" id="reset-btn" class="px-6 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Limpar</button>
-                <button type="submit" id="calculate-btn" class="px-8 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Calcular</button>
-            </div>
-        </form>
-
-        <div id="result-area" class="mt-10 p-6 bg-indigo-50 rounded-lg border border-indigo-200 hidden">
+        <div id="result-area" class="mt-10 p-6 bg-indigo-50 rounded-lg border border-indigo-200" style="display: none;">
             <h2 class="text-2xl font-semibold text-indigo-800 mb-4">Resultado do Dimensionamento</h2>
             <div id="result-content" class="space-y-3 text-lg text-gray-700"></div>
         </div>
-        <div id="error-message" class="mt-6 p-4 bg-red-100 text-red-700 rounded-md hidden"></div>
+        <div id="error-message" class="mt-6 p-4 bg-red-100 text-red-700 rounded-md" style="display: none;"></div>
     </main>
 </div>
 
-<!-- Seu JavaScript original -->
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // Cole todo o seu código JavaScript aqui, sem a tag <script> externa
-        // ...
+// =========================================================================================
+// SCRIPT COMPLETO E FUNCIONAL - v3
+// =========================================================================================
+document.addEventListener('DOMContentLoaded', function () {
+    // ESTADO DA APLICAÇÃO
+    let state = { currentStep: 1, selectedArea: '', selectedSector: '', calculationMethod: '', utiMethod: '' };
+    let patientCounter = 0;
+
+    // ELEMENTOS DO DOM
+    const steps = document.querySelectorAll('.step');
+    const backButtonContainer = document.getElementById('back-button-container');
+    const backButtonStep2 = document.getElementById('back-button');
+    const backButtonStep3 = document.getElementById('back-button-step3');
+    const formContent = document.getElementById('form-content');
+    const resultArea = document.getElementById('result-area');
+    const resultDiv = document.getElementById('result-content');
+    const errorDiv = document.getElementById('error-message');
+    const mainForm = document.getElementById('calculation-form');
+
+    // BANCO DE DADOS DE SETORES
+    const sectors = {
+        hospitalar: [
+            { value: 'ui', text: 'Unidade de Internação (UI)' },
+            { value: 'uti_adulto', text: 'UTI Adulto' },
+            { value: 'uti_pediatrica', text: 'UTI Pediátrica' },
+            { value: 'uti_neonatal', text: 'UTI Neonatal' },
+            { value: 'saude_mental', text: 'Saúde Mental / Psiquiatria' },
+            { value: 'cc', text: 'Centro Cirúrgico (CC)' },
+            { value: 'cme', text: 'Central de Material e Esterilização (CME)' },
+        ],
+        ambulatorial: [ { value: 'hd', text: 'Hemodiálise' }, { value: 'qt', text: 'Quimioterapia Ambulatorial' } ],
+        primaria: [ { value: 'esf', text: 'Atenção Primária / ESF' } ]
+    };
+
+    // TEMPLATES DOS FORMULÁRIOS
+    const nasChecklistTemplate = `
+        <legend class="font-semibold text-gray-700 mt-4 mb-2 text-base">Atividades Básicas</legend>
+        <div class="nas-item"><label class="flex items-center"><input type="checkbox" data-points="4.5" class="mr-2 h-4 w-4"> 1. Sinais vitais, balanço hídrico e cálculo</label></div>
+        <div class="nas-item"><label class="flex items-center"><input type="checkbox" data-points="4.3" class="mr-2 h-4 w-4"> 2. Investigações laboratoriais</label></div>
+        <div class="nas-item"><label class="flex items-center"><input type="checkbox" data-points="1.3" class="mr-2 h-4 w-4"> 3. Medicação, exceto drogas vasoativas</label></div>
+        <div class="nas-item"><label class="flex items-center"><input type="checkbox" data-points="7.1" class="mr-2 h-4 w-4"> 4. Procedimentos de higiene</label></div>
+        <div class="nas-item"><label class="flex items-center"><input type="checkbox" data-points="1.4" class="mr-2 h-4 w-4"> 5. Cuidado com drenos</label></div>
+        <div class="nas-item"><label class="flex items-center"><input type="checkbox" data-points="1.8" class="mr-2 h-4 w-4"> 6. Mobilização e posicionamento</label></div>
+        <div class="nas-item"><label class="flex items-center"><input type="checkbox" data-points="5.6" class="mr-2 h-4 w-4"> 7. Suporte e cuidado aos familiares e pacientes</label></div>
+        <div class="nas-item"><label class="flex items-center"><input type="checkbox" data-points="4.1" class="mr-2 h-4 w-4"> 8. Tarefas administrativas e gerenciais</label></div>
+        <legend class="font-semibold text-gray-700 mt-4 mb-2 text-base">Suporte Ventilatório</legend>
+        <div class="nas-item"><label class="flex items-center"><input type="checkbox" data-points="1.4" class="mr-2 h-4 w-4"> 9. Cuidado com vias aéreas artificiais</label></div>
+        <div class="nas-item"><label class="flex items-center"><input type="checkbox" data-points="2.4" class="mr-2 h-4 w-4"> 10. Tratamento para melhorar a função pulmonar</label></div>
+        <div class="nas-item"><label class="flex items-center"><input type="checkbox" data-points="9.3" class="mr-2 h-4 w-4"> 11. Ventilação mecânica</label></div>
+        <legend class="font-semibold text-gray-700 mt-4 mb-2 text-base">Suporte Cardiovascular</legend>
+        <div class="nas-item"><label class="flex items-center"><input type="checkbox" data-points="2.5" class="mr-2 h-4 w-4"> 12. Medicação vasoativa</label></div>
+        <div class="nas-item"><label class="flex items-center"><input type="checkbox" data-points="4.6" class="mr-2 h-4 w-4"> 13. Reposição endovenosa de grandes perdas fluidas</label></div>
+        <div class="nas-item"><label class="flex items-center"><input type="checkbox" data-points="1.2" class="mr-2 h-4 w-4"> 14. Monitorização do átrio esquerdo</label></div>
+        <div class="nas-item"><label class="flex items-center"><input type="checkbox" data-points="7.3" class="mr-2 h-4 w-4"> 15. Reanimação cardiorrespiratória</label></div>
+        <legend class="font-semibold text-gray-700 mt-4 mb-2 text-base">Suporte Renal</legend>
+        <div class="nas-item"><label class="flex items-center"><input type="checkbox" data-points="8.4" class="mr-2 h-4 w-4"> 16. Técnicas de hemofiltração</label></div>
+        <div class="nas-item"><label class="flex items-center"><input type="checkbox" data-points="2.8" class="mr-2 h-4 w-4"> 17. Medida quantitativa do débito urinário</label></div>
+        <legend class="font-semibold text-gray-700 mt-4 mb-2 text-base">Suporte Neurológico</legend>
+        <div class="nas-item"><label class="flex items-center"><input type="checkbox" data-points="4.2" class="mr-2 h-4 w-4"> 18. Medida da pressão intracraniana</label></div>
+        <legend class="font-semibold text-gray-700 mt-4 mb-2 text-base">Suporte Metabólico</legend>
+        <div class="nas-item"><label class="flex items-center"><input type="checkbox" data-points="2.2" class="mr-2 h-4 w-4"> 19. Tratamento de acidose/alcalose metabólica complexa</label></div>
+        <div class="nas-item"><label class="flex items-center"><input type="checkbox" data-points="4.0" class="mr-2 h-4 w-4"> 20. Nutrição parenteral total</label></div>
+        <div class="nas-item"><label class="flex items-center"><input type="checkbox" data-points="2.0" class="mr-2 h-4 w-4"> 21. Alimentação enteral</label></div>
+        <legend class="font-semibold text-gray-700 mt-4 mb-2 text-base">Intervenções Específicas</legend>
+        <div class="nas-item"><label class="flex items-center"><input type="checkbox" data-points="1.5" class="mr-2 h-4 w-4"> 22. Intervenções específicas na unidade</label></div>
+        <div class="nas-item"><label class="flex items-center"><input type="checkbox" data-points="1.6" class="mr-2 h-4 w-4"> 23. Intervenções específicas fora da unidade</label></div>
+    `;
+    
+    const formTemplates = {
+        ui: `
+            <h2 class="text-2xl font-semibold text-indigo-700 border-b pb-2">Unidade de Internação</h2>
+            <p class="text-sm text-gray-600">O cálculo é feito a partir da classificação dos pacientes por grau de dependência.</p>
+            <div class="mt-4">
+                <label class="block text-sm font-medium text-gray-700">Selecione o Instrumento de Classificação de Referência:</label>
+                <div class="flex space-x-2 mt-2">
+                    <button type="button" class="method-btn selected px-4 py-2 border rounded-md" data-method="fugulin">Fugulin et al.</button>
+                    <button type="button" class="method-btn px-4 py-2 border rounded-md" data-method="perroca">Perroca</button>
+                </div>
+            </div>
+            <p class="font-medium text-gray-800 pt-4">Nº de Pacientes (média diária) por Grau de Dependência:</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div><label class="block text-sm font-medium">Cuidado Mínimo</label><input type="number" data-care="minimo" class="mt-1 block w-full rounded-md" value="0"></div>
+                <div><label class="block text-sm font-medium">Cuidado Intermediário</label><input type="number" data-care="intermediario" class="mt-1 block w-full rounded-md" value="0"></div>
+                <div><label class="block text-sm font-medium">Alta Dependência</label><input type="number" data-care="alta_dependencia" class="mt-1 block w-full rounded-md" value="0"></div>
+                <div><label class="block text-sm font-medium">Cuidado Semi-Intensivo</label><input type="number" data-care="semi_intensivo" class="mt-1 block w-full rounded-md" value="0"></div>
+                <div><label class="block text-sm font-medium">Cuidado Intensivo</label><input type="number" data-care="intensivo" class="mt-1 block w-full rounded-md" value="0"></div>
+            </div>`,
+        uti_adulto: `
+            <h2 class="text-2xl font-semibold text-indigo-700 border-b pb-2">UTI Adulto</h2>
+            <div id="uti-method-selection">
+                <p class="text-gray-700 mt-4">Como você deseja fornecer a pontuação NAS (Nursing Activities Score)?</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                    <div id="uti-informar-btn" class="method-card cursor-pointer p-4 bg-gray-50 border border-gray-200 rounded-lg text-center">
+                        <h3 class="font-semibold text-gray-800">Informar Média Manualmente</h3>
+                        <p class="text-sm text-gray-500">Para quem já calculou a média de pontos NAS da unidade.</p>
+                    </div>
+                    <div id="uti-calcular-btn" class="method-card cursor-pointer p-4 bg-gray-50 border border-gray-200 rounded-lg text-center">
+                        <h3 class="font-semibold text-gray-800">Calcular Paciente a Paciente</h3>
+                        <p class="text-sm text-gray-500">Utilize a calculadora integrada para avaliar cada paciente.</p>
+                    </div>
+                </div>
+            </div>
+            <div id="uti-informar-form" class="hidden mt-6 space-y-4">
+                <div><label for="uti-leitos-manual" class="block text-sm font-medium">Nº de Leitos da UTI</label><input type="number" id="uti-leitos-manual" class="mt-1 block w-full rounded-md"></div>
+                <div><label for="uti-nas-manual" class="block text-sm font-medium">Média de Pontos NAS da unidade</label><input type="number" id="uti-nas-manual" step="0.01" class="mt-1 block w-full rounded-md"></div>
+            </div>
+            <div id="uti-calcular-form" class="hidden mt-6 space-y-4">
+                <div id="nas-summary" class="p-4 bg-gray-100 rounded-md">
+                    <h3 class="font-semibold">Resumo da Avaliação NAS</h3>
+                    <p>Média de Pontos NAS da Unidade: <span id="nas-average-display" class="font-bold text-indigo-600 text-xl">0.00</span></p>
+                </div>
+                <div id="nas-patients-list" class="mt-4 space-y-3"></div>
+                <div class="flex justify-between items-center mt-4">
+                    <span class="text-gray-500 self-center">Após preencher, clique em 'Calcular' abaixo</span>
+                    <button type="button" id="add-patient-btn" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Cadastrar Novo Paciente</button>
+                </div>
+            </div>
+            `,
+        saude_mental: `
+            <h2 class="text-2xl font-semibold text-indigo-700 border-b pb-2">Saúde Mental / Psiquiatria</h2>
+            <p class="font-medium text-gray-800 pt-4">Nº de Pacientes (média diária) por Nível de Dependência:</p>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div><label class="block text-sm font-medium">Dependência Discreta</label><input type="number" data-care="discreta" class="mt-1 block w-full rounded-md" value="0"></div>
+                <div><label class="block text-sm font-medium">Dependência Intermediária</label><input type="number" data-care="intermediaria" class="mt-1 block w-full rounded-md" value="0"></div>
+                <div><label class="block text-sm font-medium">Dependência Plena</label><input type="number" data-care="plena" class="mt-1 block w-full rounded-md" value="0"></div>
+            </div>`,
+        hd: `
+            <h2 class="text-2xl font-semibold text-indigo-700 border-b pb-2">Hemodiálise</h2>
+            <p class="text-sm text-gray-600">Cálculo baseado nas horas de assistência por sessão.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div><label class="block text-sm font-medium">Nº médio de pacientes por turno</label><input type="number" id="hd-pacientes" class="mt-1 block w-full rounded-md" required></div>
+                <div><label class="block text-sm font-medium">Nº de turnos por dia</label><input type="number" id="hd-turnos" class="mt-1 block w-full rounded-md" value="3" required></div>
+            </div>`,
+        esf: `
+            <h2 class="text-2xl font-semibold text-indigo-700 border-b pb-2">Atenção Primária / ESF</h2>
+            <p class="text-sm text-gray-600">Cálculo baseado na cobertura populacional.</p>
+            <div class="mt-4">
+                <label for="esf-populacao" class="block text-sm font-medium text-gray-700">População Adscrita (total de pessoas cobertas pela equipe)</label>
+                <input type="number" id="esf-populacao" class="mt-1 block w-full rounded-md" required>
+            </div>
+            <p class="text-xs text-gray-500 mt-2">O Parecer COFEN recomenda 1 Enfermeiro e até 2 Técnicos/Auxiliares por Equipe de Saúde da Família (eSF).</p>`,
+        cc: `
+            <h2 class="text-2xl font-semibold text-indigo-700 border-b pb-2">Centro Cirúrgico (CC)</h2>
+            <p class="text-sm text-gray-600">Cálculo baseado no total de horas de cirurgia.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div><label class="block text-sm font-medium">Nº de salas cirúrgicas em funcionamento</label><input type="number" id="cc-salas" class="mt-1 block w-full rounded-md" required></div>
+                <div><label class="block text-sm font-medium">Média de horas de ocupação por sala/dia</label><input type="number" id="cc-horas" class="mt-1 block w-full rounded-md" step="0.1" required></div>
+            </div>`,
+        cme: `
+            <h2 class="text-2xl font-semibold text-indigo-700 border-b pb-2">Central de Material e Esterilização (CME)</h2>
+            <p class="text-sm text-gray-600">Cálculo baseado na produção de material.</p>
+            <p class="font-medium text-gray-800 pt-4">Produção Média Diária:</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div><label class="block text-sm font-medium">Material estéril (em Unidades de Esterilização)</label><input type="number" data-prod="esteril" class="mt-1 block w-full rounded-md" value="0"></div>
+                <div><label class="block text-sm font-medium">Material desinfetado/limpo (em Unidades)</label><input type="number" data-prod="limpo" class="mt-1 block w-full rounded-md" value="0"></div>
+            </div>`,
+        qt: `
+            <h2 class="text-2xl font-semibold text-indigo-700 border-b pb-2">Quimioterapia Ambulatorial</h2>
+            <p class="text-sm text-gray-600">Cálculo baseado no número de sessões e duração.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div><label class="block text-sm font-medium">Nº médio de pacientes/dia</label><input type="number" id="qt-pacientes" class="mt-1 block w-full rounded-md" required></div>
+                <div><label class="block text-sm font-medium">Duração média da sessão (em horas)</label><input type="number" id="qt-duracao" class="mt-1 block w-full rounded-md" step="0.1" value="6" required></div>
+            </div>`
+    };
+    formTemplates.uti_pediatrica = formTemplates.uti_adulto.replace(/UTI Adulto/g,'UTI Pediátrica');
+    formTemplates.uti_neonatal = formTemplates.uti_adulto.replace(/UTI Adulto/g,'UTI Neonatal');
+
+    function goToStep(stepNumber) {
+        state.currentStep = stepNumber;
+        steps.forEach(s => s.classList.remove('active'));
+        document.getElementById(`step-${stepNumber}`).classList.add('active');
+        backButtonContainer.style.display = (state.currentStep > 1) ? 'flex' : 'none';
+        resultArea.style.display = 'none';
+        errorDiv.style.display = 'none';
+    }
+
+    function renderSectorOptions() {
+        const sectorOptions = sectors[state.selectedArea];
+        const select = document.getElementById('sector-select');
+        select.innerHTML = '<option value="" disabled selected>Selecione um setor...</option>';
+        sectorOptions.forEach(opt => select.innerHTML += `<option value="${opt.value}">${opt.text}</option>`);
+    }
+
+    function renderForm() {
+        const formHtml = formTemplates[state.selectedSector];
+        if (formHtml) {
+            patientCounter = 0; // Reseta contador de pacientes
+            formContent.innerHTML = formHtml;
+            document.querySelectorAll('.method-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('selected'));
+                    e.currentTarget.classList.add('selected');
+                    state.calculationMethod = e.currentTarget.dataset.method;
+                });
+            });
+            const firstMethodBtn = formContent.querySelector('.method-btn');
+            if(firstMethodBtn) state.calculationMethod = firstMethodBtn.dataset.method;
+            if (state.selectedSector.startsWith('uti')) {
+                setupUTIMethodChoice();
+            }
+            goToStep(3);
+        } else {
+            displayError('Formulário para este setor ainda não implementado.');
+        }
+    }
+
+    document.querySelectorAll('.area-card').forEach(card => {
+        card.addEventListener('click', () => {
+            state.selectedArea = card.id.replace('select-', '');
+            renderSectorOptions();
+            goToStep(2);
+        });
     });
+
+    document.getElementById('sector-select').addEventListener('change', (e) => {
+        state.selectedSector = e.target.value;
+        if (state.selectedSector) renderForm();
+    });
+
+    [backButtonStep2, backButtonStep3].forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (state.currentStep === 3) goToStep(2);
+            else if (state.currentStep === 2) goToStep(1);
+        });
+    });
+
+    document.getElementById('reset-btn').addEventListener('click', () => {
+        mainForm.reset();
+        if (state.selectedSector.startsWith('uti')) {
+            renderForm(); // Re-renderiza o formulário para voltar à estaca zero
+        }
+        resultArea.style.display = 'none';
+        errorDiv.style.display = 'none';
+    });
+
+    mainForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        try {
+            const chs = getInput('chs', true);
+            const ist = getInput('ist', true) / 100;
+            if (chs <= 0) throw new Error("A Carga Horária Semanal (CHS) deve ser um número positivo.");
+            if (ist < 0.15) console.warn("Atenção: O IST recomendado pelo COFEN é de no mínimo 15%.");
+
+            let result = {};
+            switch (state.selectedSector) {
+                case 'ui': result = calculateUI(); break;
+                case 'uti_adulto': case 'uti_pediatrica': case 'uti_neonatal': result = calculateUTI(); break;
+                case 'saude_mental': result = calculateSaudeMental(); break;
+                case 'hd': result = calculateHD(); break;
+                case 'esf': result = calculateESF(); break;
+                case 'cc': result = calculateCC(); break;
+                case 'cme': result = calculateCME(); break;
+                case 'qt': result = calculateQT(); break;
+                default: throw new Error("Cálculo para este setor não implementado.");
+            }
+            displayResult(result, chs, ist);
+        } catch (error) {
+            displayError(error.message);
+        }
+    });
+
+    const getInput = (id, required = false) => {
+        const element = document.getElementById(id);
+        if (!element) return 0;
+        const value = parseFloat(element.value);
+        if (required && (element.value === '' || isNaN(value))) {
+            const label = element.labels?.[0] ? element.labels[0].textContent : 'O campo';
+            element.focus();
+            throw new Error(`${label} é obrigatório e deve ser um número.`);
+        }
+        return isNaN(value) ? 0 : value;
+    };
+    
+    function calculateUI() {
+        const hoursPerCare = {
+            fugulin: { minimo: 3.8, intermediario: 5.6, alta_dependencia: 9.4, semi_intensivo: 9.4, intensivo: 17.9 },
+            perroca: { minimo: 4, intermediario: 6, alta_dependencia: 10, semi_intensivo: 10, intensivo: 18 }
+        };
+        const selectedHours = hoursPerCare[state.calculationMethod];
+        let totalHoras = 0;
+        document.querySelectorAll('#form-content input[data-care]').forEach(input => {
+            totalHoras += (input.valueAsNumber || 0) * selectedHours[input.dataset.care];
+        });
+        return { totalHoras };
+    }
+
+    function calculateSaudeMental() {
+        const hoursPerCare = { discreta: 4, intermediaria: 6, plena: 10 };
+        let totalHoras = 0;
+        document.querySelectorAll('#form-content input[data-care]').forEach(input => {
+            totalHoras += (input.valueAsNumber || 0) * hoursPerCare[input.dataset.care];
+        });
+        return { totalHoras };
+    }
+    
+    function calculateHD() { return { totalHoras: getInput('hd-pacientes', true) * getInput('hd-turnos', true) * 4 }; }
+    function calculateESF() {
+        const populacao = getInput('esf-populacao', true);
+        const numEquipes = Math.ceil(populacao / 4000);
+        return { isESF: true, populacao, numEquipes, enfRecomendado: numEquipes, tecRecomendado: numEquipes * 2 };
+    }
+    function calculateCC() { return { totalHoras: getInput('cc-salas', true) * getInput('cc-horas', true) * 1.4 }; }
+    function calculateCME() {
+        const prodEsteril = document.querySelector('input[data-prod="esteril"]').valueAsNumber || 0;
+        const prodLimpo = document.querySelector('input[data-prod="limpo"]').valueAsNumber || 0;
+        return { totalHoras: (prodEsteril * 0.5) + (prodLimpo * 0.2) };
+    }
+    function calculateQT() { return { totalHoras: getInput('qt-pacientes', true) * getInput('qt-duracao', true) }; }
+    
+    // --- LÓGICA ESPECÍFICA UTI E NAS ---
+    function setupUTIMethodChoice() {
+        const selDiv = document.getElementById('uti-method-selection');
+        const informarBtn = document.getElementById('uti-informar-btn');
+        const calcularBtn = document.getElementById('uti-calcular-btn');
+        const informarForm = document.getElementById('uti-informar-form');
+        const calcularForm = document.getElementById('uti-calcular-form');
+        informarBtn.addEventListener('click', () => {
+            state.utiMethod = 'informar';
+            selDiv.style.display = 'none';
+            informarForm.classList.remove('hidden');
+        });
+        calcularBtn.addEventListener('click', () => {
+            state.utiMethod = 'calcular';
+            selDiv.style.display = 'none';
+            calcularForm.classList.remove('hidden');
+            addPatientForm();
+        });
+    }
+
+    function addPatientForm() {
+        patientCounter++;
+        const list = document.getElementById('nas-patients-list');
+        const patientDiv = document.createElement('div');
+        patientDiv.className = 'border border-gray-200 rounded-md patient-form';
+        patientDiv.innerHTML = `
+            <div class="nas-accordion-header bg-gray-50 p-3 flex justify-between items-center">
+                <h4 class="font-semibold">Paciente ${patientCounter}</h4>
+                <span class="text-gray-700">Pontuação: <strong data-score-display="patient-${patientCounter}" class="text-blue-600">0.0</strong></span>
+            </div>
+            <div class="nas-accordion-content p-4 bg-white">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                    <div><label class="block text-sm">Nº Leito:</label><input type="text" class="mt-1 w-full rounded-md border-gray-300"></div>
+                    <div><label class="block text-sm">Nome:</label><input type="text" class="mt-1 w-full rounded-md border-gray-300"></div>
+                </div>
+                <form data-patient-id="patient-${patientCounter}">${nasChecklistTemplate}</form>
+            </div>
+        `;
+        list.appendChild(patientDiv);
+        addNasEventListeners();
+        const addBtn = document.getElementById('add-patient-btn');
+        if (addBtn && !addBtn.dataset.listenerAttached) {
+            addBtn.addEventListener('click', addPatientForm);
+            addBtn.dataset.listenerAttached = 'true';
+        }
+    }
+
+    function addNasEventListeners() {
+        document.querySelectorAll('.nas-accordion-header').forEach(header => {
+            if (header.dataset.listener) return;
+            header.dataset.listener = 'true';
+            header.addEventListener('click', (e) => {
+                const content = e.currentTarget.nextElementSibling;
+                content.style.maxHeight = content.style.maxHeight ? null : content.scrollHeight + "px";
+            });
+        });
+        document.querySelectorAll('#nas-patients-list form input[type=checkbox]').forEach(input => {
+            if (input.dataset.listener) return;
+            input.dataset.listener = 'true';
+            input.addEventListener('change', updateNasScores);
+        });
+    }
+
+    function updateNasScores() {
+        let totalScoreSum = 0;
+        const patientForms = document.querySelectorAll('.patient-form');
+        const numPatients = patientForms.length;
+        
+        patientForms.forEach(form => {
+            const patientId = form.querySelector('form').dataset.patientId;
+            let patientScore = 0;
+            form.querySelectorAll('input:checked').forEach(input => {
+                patientScore += parseFloat(input.dataset.points);
+            });
+            form.querySelector(`[data-score-display="${patientId}"]`).textContent = patientScore.toFixed(1);
+            totalScoreSum += patientScore;
+        });
+
+        const average = numPatients > 0 ? totalScoreSum / numPatients : 0;
+        document.getElementById('nas-average-display').textContent = average.toFixed(2);
+    }
+    
+    function calculateUTI() {
+        let leitos, nasMedio;
+        if (state.utiMethod === 'informar') {
+            leitos = getInput('uti-leitos-manual', true);
+            nasMedio = getInput('uti-nas-manual', true);
+            if (nasMedio <= 0) throw new Error("A Média de Pontos NAS é obrigatória.");
+        } else if (state.utiMethod === 'calcular') {
+            leitos = document.querySelectorAll('.patient-form').length;
+            if (leitos === 0) throw new Error("Nenhum paciente foi avaliado. Adicione e preencha os dados do paciente.");
+            const nasMedioText = document.getElementById('nas-average-display').textContent;
+            nasMedio = parseFloat(nasMedioText);
+            if (nasMedio <= 0) throw new Error("A pontuação NAS dos pacientes deve ser preenchida para o cálculo.");
+        } else {
+            throw new Error("Selecione um método para informar a pontuação NAS.");
+        }
+        return { totalHoras: leitos * nasMedio * 0.24 };
+    }
+
+    function displayResult(result, chs, ist) {
+        let content = '';
+        if (result.isESF) {
+             content = `
+                <p>Para uma população de <strong>${result.populacao.toLocaleString('pt-BR')}</strong> pessoas, o recomendado é:</p>
+                <p class="mt-4"><strong class="font-bold text-2xl text-indigo-600">${result.numEquipes}</strong> Equipe(s) de Saúde da Família (eSF).</p>
+                <hr class="my-3"><p>Composição sugerida (total):</p>
+                <ul class="list-disc list-inside ml-4"><li><strong>${result.enfRecomendado}</strong> Enfermeiro(s)</li><li>Até <strong>${result.tecRecomendado}</strong> Técnico(s)/Auxiliar(es) de Enfermagem</li></ul>
+                <p class="text-xs text-gray-500 mt-4">Nota: O dimensionamento na ESF é primariamente baseado na composição de equipes por população adscrita, conforme PNAB e Parecer COFEN.</p>`;
+        } else {
+            const totalHorasDiarias = result.totalHoras;
+            const qp = (totalHorasDiarias / (chs / 7)) * (1 + ist);
+            const qpArredondado = Math.ceil(qp);
+            const propEnf = state.selectedSector.startsWith('uti') ? 0.52 : 0.33;
+            const propTec = 1 - propEnf;
+            const qpEnf = qp * propEnf;
+            const qpTec = qp * propTec;
+            const qpEnfArr = Math.ceil(qpEnf);
+            const qpTecArr = Math.ceil(qpTec);
+            content = `
+                <p>Total de Horas de Enfermagem diárias (THE): <span class="font-bold">${totalHorasDiarias.toFixed(2)} horas</span></p>
+                <hr class="my-3">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <p><strong>Valor Calculado (QP):</strong> <span class="font-bold text-2xl text-indigo-600">${qp.toFixed(2)}</span></p>
+                        <p class="text-sm text-gray-600">Este é o valor exato da fórmula.</p>
+                    </div>
+                    <div>
+                        <p><strong>Valor Recomendado:</strong> <span class="font-bold text-2xl text-green-600">${qpArredondado}</span></p>
+                        <p class="text-sm text-gray-600">Arredondado para o próximo inteiro (prática de gestão).</p>
+                    </div>
+                </div>
+                <div class="mt-4 p-4 bg-gray-100 rounded-md">
+                    <p class="font-semibold">Distribuição Sugerida:</p>
+                    <ul class="list-disc list-inside ml-4">
+                        <li><strong>Enfermeiros:</strong> ${qpEnf.toFixed(2)} (Recomendado: ${qpEnfArr})</li>
+                        <li><strong>Técnicos/Auxiliares:</strong> ${qpTec.toFixed(2)} (Recomendado: ${qpTecArr})</li>
+                    </ul>
+                </div>`;
+        }
+        resultDiv.innerHTML = content;
+        resultArea.style.display = 'block';
+        errorDiv.style.display = 'none';
+        resultArea.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function displayError(message) {
+        errorDiv.textContent = message;
+        errorDiv.style.display = 'block';
+        resultArea.style.display = 'none';
+        errorDiv.scrollIntoView({ behavior: 'smooth' });
+    }
+});
 </script>
 {% endblock %}
-```
-**Instrução:** Copie e cole todo o conteúdo do seu arquivo HTML original dentro deste template, incluindo o JavaScript no final, conforme indicado.
-
----
-
-### **Passo 3: Tornando o Menu de Ferramentas Dinâmico**
-
-Vamos fazer o menu lateral do dashboard mostrar apenas as ferramentas que a empresa do usuário contratou.
-
-Edite o arquivo `templates/base_dashboard.html`:
-
-
-```html
-{% load static %}
-<!DOCTYPE html>
-<html lang="pt-BR">
-<!-- ... (head e início do body) ... -->
-<body>
-    <div class="dashboard-grid">
-        <aside class="sidebar">
-            <!-- ... (sidebar-header) ... -->
-            <nav class="sidebar-nav">
-                <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
-                    <i class="fas fa-tachometer-alt"></i> Painel de Controle
-                </a>
-                
-                <!-- ... (Menus de Admin) ... -->
-
-                <!-- Menu de Ferramentas Dinâmico -->
-                {% if user.empresa and user.empresa.ferramentas_contratadas.all %}
-                    <div class="menu-separator">
-                        <span>Ferramentas</span>
-                    </div>
-                    {% for ferramenta in user.empresa.ferramentas_contratadas.all %}
-                        <a href="{% url 'ferramenta_'|add:ferramenta.slug %}" class="{% if request.resolver_match.url_name == 'ferramenta_'|add:ferramenta.slug %}active{% endif %}">
-                            <i class="fas fa-calculator"></i> {{ ferramenta.nome }}
-                        </a>
-                    {% endfor %}
-                {% endif %}
-            </nav>
-            <!-- ... (sidebar-footer) ... -->
-        </aside>
-        <!-- ... (resto do arquivo) ... -->
-    </div>
-</body>
-</html>
