@@ -1,0 +1,55 @@
+{% extends 'base_dashboard.html' %}
+{% load static %}
+
+{% block page_title %}Gerenciar Pacientes{% endblock %}
+
+{% block dashboard_content %}
+<div class="management-header">
+    <h2 class="text-2xl font-bold text-gray-700">Lista de Pacientes</h2>
+    <a href="{% url 'gestao_hospitalar:paciente_create' %}" class="btn btn-primary"><i class="fas fa-plus mr-2"></i> Adicionar Paciente</a>
+</div>
+
+<div class="table-responsive">
+    <table class="management-table">
+        <thead>
+            <tr>
+                <th>Nome do Paciente</th>
+                <th>Data de Nascimento</th>
+                <th>Leito Alocado</th>
+                <th>CID-10 Principal</th>
+                <th class="text-center">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for paciente in pacientes %}
+            <tr>
+                <td>{{ paciente.nome }}</td>
+                <td>{{ paciente.data_nascimento|date:"d/m/Y" }}</td>
+                <td>
+                    {% if paciente.leito %}
+                        {{ paciente.leito }}
+                    {% else %}
+                        <span class="text-gray-500">Não alocado</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if paciente.hipotese_diagnostica_principal %}
+                        {{ paciente.hipotese_diagnostica_principal.codigo }}
+                    {% else %}
+                        <span class="text-gray-500">N/A</span>
+                    {% endif %}
+                </td>
+                <td class="text-center">
+                    <a href="{% url 'gestao_hospitalar:paciente_update' paciente.pk %}" class="btn-action btn-edit">Editar</a>
+                    <a href="{% url 'gestao_hospitalar:paciente_delete' paciente.pk %}" class="btn-action btn-delete">Excluir</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center text-gray-500 py-4">Nenhum paciente cadastrado.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends 'base_dashboard.html' %}
+{% load static %}
+
+{% block page_title %}Gerenciar Leitos{% endblock %}
+
+{% block dashboard_content %}
+<div class="management-header">
+    <h2 class="text-2xl font-bold text-gray-700">Lista de Leitos</h2>
+    <a href="{% url 'gestao_hospitalar:leito_create' %}" class="btn btn-primary"><i class="fas fa-plus mr-2"></i> Adicionar Leito</a>
+</div>
+
+<div class="table-responsive">
+    <table class="management-table">
+        <thead>
+            <tr>
+                <th>Número do Leito</th>
+                <th>Quarto</th>
+                <th>Ala</th>
+                <th>Status</th>
+                <th class="text-center">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for leito in leitos %}
+            <tr>
+                <td>{{ leito.numero }}</td>
+                <td>{{ leito.quarto.numero }}</td>
+                <td>{{ leito.quarto.ala.nome }}</td>
+                <td>
+                    {% if leito.paciente_alocado %}
+                        <span class="px-2 py-1 font-semibold leading-tight text-red-700 bg-red-100 rounded-sm">
+                            Ocupado ({{ leito.paciente_alocado.nome }})
+                        </span>
+                    {% else %}
+                        <span class="px-2 py-1 font-semibold leading-tight text-green-700 bg-green-100 rounded-sm">
+                            Vago
+                        </span>
+                    {% endif %}
+                </td>
+                <td class="text-center">
+                    <a href="{% url 'gestao_hospitalar:leito_update' leito.pk %}" class="btn-action btn-edit">Editar</a>
+                    <a href="{% url 'gestao_hospitalar:leito_delete' leito.pk %}" class="btn-action btn-delete">Excluir</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" class="text-center text-gray-500 py-4">Nenhum leito cadastrado.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

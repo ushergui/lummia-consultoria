@@ -1,0 +1,59 @@
+{% extends 'base_dashboard.html' %}
+{% load static %}
+
+{% block page_title %}Painel de Classificação Diária{% endblock %}
+
+{% block dashboard_content %}
+<div class="management-header">
+    <h2 class="text-2xl font-bold text-gray-700">Pacientes Internados</h2>
+    <a href="{% url 'gestao_hospitalar:paciente_create' %}" class="btn btn-primary"><i class="fas fa-user-plus mr-2"></i> Admitir Paciente</a>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+    {% for paciente in pacientes %}
+    <div class="bg-white rounded-lg shadow-lg p-5 flex flex-col">
+        <div class="flex-grow">
+            <div class="flex justify-between items-start">
+                <h3 class="text-lg font-bold text-gray-800">{{ paciente.nome }}</h3>
+                {% if paciente.ultima_avaliacao %}
+                    <span class="px-2 py-1 text-xs font-semibold leading-tight rounded-full
+                        {% if 'Intensivo' in paciente.ultima_avaliacao.categoria_cuidado %} bg-red-100 text-red-700
+                        {% elif 'Alta' in paciente.ultima_avaliacao.categoria_cuidado %} bg-orange-100 text-orange-700
+                        {% elif 'Intermediário' in paciente.ultima_avaliacao.categoria_cuidado %} bg-yellow-100 text-yellow-700
+                        {% else %} bg-green-100 text-green-700 {% endif %}">
+                        {{ paciente.ultima_avaliacao.categoria_cuidado }}
+                    </span>
+                {% endif %}
+            </div>
+            <p class="text-sm text-gray-500">
+                <i class="fas fa-bed mr-1"></i> Leito {{ paciente.leito }}
+            </p>
+            <div class="border-t my-4"></div>
+            
+            <div class="flex justify-between items-center text-sm">
+                <span class="font-semibold">Avaliação de Hoje:</span>
+                {% if paciente.avaliacao_hoje_feita %}
+                    <span class="text-green-600 font-bold"><i class="fas fa-check-circle mr-1"></i> Realizada</span>
+                {% else %}
+                    <span class="text-yellow-600 font-bold"><i class="fas fa-exclamation-triangle mr-1"></i> Pendente</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="mt-5 pt-4 border-t flex items-center justify-between">
+            <a href="{% url 'gestao_hospitalar:paciente_alta_confirm' paciente.pk %}" class="text-sm text-red-600 hover:text-red-800">
+                <i class="fas fa-sign-out-alt mr-1"></i> Dar Alta
+            </a>
+            <a href="{% url 'gestao_hospitalar:paciente_avaliar' paciente.pk %}" class="btn btn-primary">
+                {% if paciente.avaliacao_hoje_feita %}Reavaliar Hoje{% else %}Avaliar Hoje{% endif %}
+            </a>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-span-full text-center text-gray-500 py-10">
+        <i class="fas fa-users fa-3x mb-4"></i>
+        <p>Nenhum paciente internado para avaliação no momento.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends 'base_dashboard.html' %}
+{% block page_title %}Gerenciar Alas{% endblock %}
+{% block dashboard_content %}
+<div class="management-header">
+    <h2 class="text-2xl font-bold text-gray-700">Lista de Alas</h2>
+    <a href="{% url 'gestao_hospitalar:ala_create' %}" class="btn btn-primary"><i class="fas fa-plus mr-2"></i> Adicionar Ala</a>
+</div>
+<div class="table-responsive">
+    <table class="management-table">
+        <thead><tr><th>Nome da Ala</th><th class="text-center">Ações</th></tr></thead>
+        <tbody>
+            {% for ala in alas %}
+            <tr>
+                <td>{{ ala.nome }}</td>
+                <td class="text-center">
+                    <a href="{% url 'gestao_hospitalar:ala_update' ala.pk %}" class="btn-action btn-edit">Editar</a>
+                    <a href="{% url 'gestao_hospitalar:ala_delete' ala.pk %}" class="btn-action btn-delete">Excluir</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="2" class="text-center text-gray-500 py-4">Nenhuma ala cadastrada.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

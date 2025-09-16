@@ -1,0 +1,39 @@
+{% extends 'base_dashboard.html' %}
+{% load static %}
+
+{% block page_title %}Gerenciar Quartos{% endblock %}
+
+{% block dashboard_content %}
+<div class="management-header">
+    <h2 class="text-2xl font-bold text-gray-700">Lista de Quartos</h2>
+    <a href="{% url 'gestao_hospitalar:quarto_create' %}" class="btn btn-primary"><i class="fas fa-plus mr-2"></i> Adicionar Quarto</a>
+</div>
+
+<div class="table-responsive">
+    <table class="management-table">
+        <thead>
+            <tr>
+                <th>Número do Quarto</th>
+                <th>Ala</th>
+                <th class="text-center">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for quarto in quartos %}
+            <tr>
+                <td>{{ quarto.numero }}</td>
+                <td>{{ quarto.ala.nome }}</td>
+                <td class="text-center">
+                    <a href="{% url 'gestao_hospitalar:quarto_update' quarto.pk %}" class="btn-action btn-edit">Editar</a>
+                    <a href="{% url 'gestao_hospitalar:quarto_delete' quarto.pk %}" class="btn-action btn-delete">Excluir</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3" class="text-center text-gray-500 py-4">Nenhum quarto cadastrado.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

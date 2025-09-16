@@ -10,6 +10,8 @@ urlpatterns = [
     path('gestao/', include('gestao.urls')), 
     path('ferramentas/', include('ferramentas.urls')),
     path('', include('core.urls')),
+    path('hospital/', include('gestao_hospitalar.urls')),
+    path("select2/", include("django_select2.urls")),
 ]
 
 if settings.DEBUG:

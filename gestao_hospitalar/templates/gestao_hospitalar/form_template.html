@@ -1,0 +1,31 @@
+{% extends 'base_dashboard.html' %}
+
+{% block page_title %}{{ titulo }}{% endblock %}
+
+{% block dashboard_content %}
+<form method="post" class="styled-form">
+    {% csrf_token %}
+    
+    {% for field in form %}
+    <div class="form-group">
+        {{ field.label_tag }}
+        {{ field }}
+        {% if field.help_text %}
+            <small class="form-text">{{ field.help_text }}</small>
+        {% endif %}
+        {% for error in field.errors %}
+            <p class="text-red-500 text-sm mt-1">{{ error }}</p>
+        {% endfor %}
+    </div>
+    {% endfor %}
+
+    <div class="form-actions">
+        <a href="{{ cancel_url }}" class="btn btn-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-primary">Salvar</button>
+    </div>
+</form>
+
+{{ form.media.css }}
+{{ form.media.js }}
+
+{% endblock %}

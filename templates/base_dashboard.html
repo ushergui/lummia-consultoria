@@ -37,20 +37,30 @@
 
                 <!-- Menu do Admin Cliente -->
                 {% if user.tipo_perfil == 'ADMIN_CLIENTE' %}
-                <a href="{% url 'gerenciar_usuarios' %}" class="{% if 'equipe' in request.resolver_match.url_name %}active{% endif %}">
-                    <i class="fas fa-users"></i> Gerenciar Equipe
-                </a>
+                    <a href="{% url 'gerenciar_usuarios' %}" class="{% if 'equipe' in request.resolver_match.url_name %}active{% endif %}">
+                        <i class="fas fa-users"></i> Gerenciar Equipe
+                    </a>
                 {% endif %}
 
-                <!-- Menu de Ferramentas Dinâmico (CORRIGIDO) -->
                 {% if user.empresa and user.empresa.ferramentas_contratadas.all %}
                     <div class="menu-separator">
                         <span>Ferramentas</span>
                     </div>
+
                     {% for ferramenta in user.empresa.ferramentas_contratadas.all %}
-                        <a href="{% url 'acessar_ferramenta' ferramenta_slug=ferramenta.slug %}" class="{% if request.resolver_match.kwargs.ferramenta_slug == ferramenta.slug %}active{% endif %}">
-                            <i class="fas fa-calculator"></i> {{ ferramenta.nome }}
-                        </a>
+                        {% if ferramenta.slug == 'gestao-hospitalar' %}
+                            <a href="{% url 'gestao_hospitalar:dashboard' %}" class="{% if 'gestao_hospitalar' in request.resolver_match.app_name %}active{% endif %}">
+                                <i class="fas fa-procedures"></i> Gestão Hospitalar
+                            </a>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% for ferramenta in user.empresa.ferramentas_contratadas.all %}
+                        {% if ferramenta.slug != 'gestao-hospitalar' %}
+                            <a href="{% url 'acessar_ferramenta' ferramenta_slug=ferramenta.slug %}" class="{% if request.resolver_match.kwargs.ferramenta_slug == ferramenta.slug %}active{% endif %}">
+                                <i class="fas fa-calculator"></i> {{ ferramenta.nome }}
+                            </a>
+                        {% endif %}
                     {% endfor %}
                 {% endif %}
             </nav>

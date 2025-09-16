@@ -1,0 +1,130 @@
+{% extends 'base_dashboard.html' %}
+{% load static %}
+
+{% block page_title %}Classificação de {{ paciente.nome }}{% endblock %}
+
+{% block dashboard_content %}
+
+<style>
+    .radio-card {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        flex: 1;
+        min-width: 150px;
+        padding: 0.75rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+        text-align: center;
+        background-color: #fff;
+    }
+    .radio-card:hover {
+        border-color: #9ca3af;
+        transform: translateY(-2px);
+    }
+    .radio-card input[type="radio"] {
+        display: none;
+    }
+    .radio-card .score {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #0A3D62;
+    }
+    .radio-card .description {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+        line-height: 1.3;
+        flex-grow: 1; /* Faz a descrição ocupar o espaço para alinhar os scores */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .radio-card.checked {
+        background-color: #0A3D62;
+        border-color: #0A3D62;
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .radio-card.checked .score,
+    .radio-card.checked .description {
+        color: #ffffff;
+    }
+</style>
+
+<form method="post" class="bg-white p-6 md:p-8 rounded-2xl shadow-lg" id="fugulin-form">
+    {% csrf_token %}
+    
+    <div class="flex flex-wrap justify-between items-start mb-6 pb-4 border-b">
+        <div>
+            <h2 class="text-xl md:text-2xl font-bold text-gray-800">Instrumento de Classificação de Fugulin</h2>
+            <p class="text-gray-500">Paciente: {{ paciente.nome }}</p>
+        </div>
+        <div class="text-right mt-4 md:mt-0">
+            <span class="text-gray-600 font-semibold">Pontuação Total</span>
+            <p id="total-score" class="text-4xl font-bold text-indigo-600">0</p>
+        </div>
+    </div>
+
+    <div class="space-y-8">
+        {% for field in form %}
+        <div class="form-group">
+            <label class="font-bold text-gray-700 text-lg mb-3 block">{{ field.label }}</label>
+            <div class="flex flex-col sm:flex-row flex-wrap gap-3">
+                {% for radio in field %}
+                <label class="radio-card">
+                    {{ radio.tag }} <span class="score">{{ radio.choice_value }}</span>
+                    <span class="description">{{ radio.choice_label }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="form-actions mt-8">
+        <a href="{% url 'gestao_hospitalar:paciente_avaliacao_list' %}" class="btn btn-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-primary">Salvar Avaliação</button>
+    </div>
+</form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('fugulin-form');
+    const totalScoreElement = document.getElementById('total-score');
+
+    function updateTotalScore() {
+        let total = 0;
+        const checkedRadios = form.querySelectorAll('input[type="radio"]:checked');
+        checkedRadios.forEach(radio => {
+            total += parseInt(radio.value, 10);
+        });
+        totalScoreElement.textContent = total;
+    }
+    
+    function updateRadioStyles() {
+        form.querySelectorAll('.radio-card').forEach(label => {
+            const radio = label.querySelector('input[type="radio"]');
+            if (radio.checked) {
+                label.classList.add('checked');
+            } else {
+                label.classList.remove('checked');
+            }
+        });
+    }
+
+    form.addEventListener('change', () => {
+        updateTotalScore();
+        updateRadioStyles();
+    });
+
+    // Inicia os cálculos e estilos ao carregar a página
+    updateTotalScore();
+    updateRadioStyles();
+});
+</script>
+
+{% endblock %}

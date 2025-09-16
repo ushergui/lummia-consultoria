@@ -24,6 +24,8 @@ INSTALLED_APPS = [
     'core',
     'accounts',
     'gestao',
+    'gestao_hospitalar',
+    'django_select2',
 ]
 
 MIDDLEWARE = [
