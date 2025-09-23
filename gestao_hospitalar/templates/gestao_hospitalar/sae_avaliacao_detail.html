@@ -1,0 +1,120 @@
+{% extends 'base_dashboard.html' %}
+{% load static %}
+
+{% block page_title %}Acompanhamento SAE – {{ avaliacao.paciente.nome }}{% endblock %}
+
+{% block dashboard_content %}
+<style>
+  .sae-header{padding-bottom:1rem;margin-bottom:1.5rem;border-bottom:1px solid rgba(0,0,0,.08);} 
+  .sae-progress{height:8px;background:#e5e7eb;border-radius:6px;overflow:hidden;margin-top:.5rem;} 
+  .sae-progress__bar{height:100%;background:#6366F1;width:0%;transition:width 0.3s ease;} 
+  .row-between{display:flex;justify-content:space-between;align-items:center;gap:1rem;} 
+  .card{border:1px solid rgba(0,0,0,.08);border-radius:12px;padding:1rem;background:#fff;} 
+  .mt-3{margin-top:.75rem}.mt-4{margin-top:1rem} 
+  .text-muted{color:#6b7280}.text-xs{font-size:.8rem}.text-sm{font-size:.9rem}
+  .achado-label{ display:flex; align-items:start; gap:.5rem; padding:.375rem .5rem; border-radius:.375rem; cursor:pointer; }
+  .achado-label:hover{ background:#F9FAFB; }
+  details > summary { list-style: none; }
+  details > summary::-webkit-details-marker { display: none; }
+</style>
+
+<section x-data="execucaoSAE('{{ csrf_token }}')" x-init="plan = JSON.parse(document.getElementById('plan-data').textContent)">
+  <div class="sae-header">
+    <h2 style="font-size:1.5rem;font-weight:700;color:#111827;margin:0;">Plano de Cuidados</h2>
+    <p class="text-muted">Paciente: <strong>{{ avaliacao.paciente.nome }}</strong> · Avaliação: <strong>{{ avaliacao.data_avaliacao|date:"d/m/Y H:i" }}</strong></p>
+    {% if avaliacao.diagnostico_nanda_selecionado %}
+      <p class="text-muted">NANDA: <strong>{{ avaliacao.diagnostico_nanda_selecionado.codigo }} - {{ avaliacao.diagnostico_nanda_selecionado.titulo }}</strong></p>
+    {% endif %}
+  </div>
+
+  {{ plan_json|json_script:"plan-data" }}
+
+  <div class="space-y-4">
+    <template x-for="noc in plan" :key="noc.id">
+      <div class="card">
+        <div class="row-between">
+          <div style="font-weight:600;" x-text="noc.codigo ? (noc.codigo + ' - ' + noc.titulo) : noc.titulo"></div>
+          <div class="text-xs text-muted">Progresso: <span x-text="getNocPct(noc).toFixed(0)+'%'"></span></div>
+        </div>
+        <div class="sae-progress"><div class="sae-progress__bar" :style="`width:${getNocPct(noc)}%`"></div></div>
+
+        <div class="mt-3 space-y-3">
+          <template x-for="nic in noc.intervencoes" :key="nic.id">
+            <details class="border-t pt-3">
+                <summary class="row-between cursor-pointer">
+                    <div style="font-weight:500;" x-text="nic.codigo ? (nic.codigo + ' - ' + nic.titulo) : nic.titulo"></div>
+                    <div class="text-xs text-muted" x-text="getNicPct(nic).toFixed(0)+'%'"></div>
+                </summary>
+                <div class="mt-2 pl-4">
+                    <template x-for="(atividade, idx) in nic.atividades" :key="idx">
+                        <label class="achado-label">
+                            <input type="checkbox"
+                                   :checked="nic.checked.includes(idx)"
+                                   @change="toggle(nic, idx, $event.target.checked)">
+                            <span class="text-sm" x-text="atividade"></span>
+                        </label>
+                    </template>
+                </div>
+            </details>
+          </template>
+        </div>
+      </div>
+    </template>
+  </div>
+
+  <div class="mt-4">
+    <a href="{% url 'gestao_hospitalar:sae_historico_paciente' avaliacao.paciente.pk %}" class="btn btn-secondary">← Voltar ao histórico</a>
+  </div>
+</section>
+
+<script>
+function execucaoSAE(csrfToken){
+  return {
+    plan: [],
+    getNicPct(nic){
+        const total = (nic.atividades || []).length;
+        const checkedCount = (nic.checked || []).length;
+        return total ? (checkedCount / total) * 100 : 0;
+    },
+    getNocPct(noc){
+        const nics = (noc.intervencoes || []);
+        if (!nics.length) return 0;
+        let sumOfPcts = 0;
+        nics.forEach(nic => sumOfPcts += this.getNicPct(nic));
+        return sumOfPcts / nics.length;
+    },
+    async toggle(nic, activityIndex, isChecked){
+        // Atualiza o estado local primeiro para resposta visual imediata
+        const checkedIndex = nic.checked.indexOf(activityIndex);
+        if (isChecked && checkedIndex === -1) {
+            nic.checked.push(activityIndex);
+        } else if (!isChecked && checkedIndex > -1) {
+            nic.checked.splice(checkedIndex, 1);
+        }
+
+        // Envia a atualização para o servidor em segundo plano
+        try {
+            await fetch("{% url 'gestao_hospitalar:api_plano_toggle' 0 %}".replace('0', nic.plano_id), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({ idx: activityIndex, checked: isChecked })
+            });
+        } catch(e) {
+            console.error('Falha ao atualizar atividade:', e);
+            alert('Falha ao sincronizar a atividade com o servidor.');
+            // Reverte a mudança local se a API falhar
+            const revertedIndex = nic.checked.indexOf(activityIndex);
+            if (isChecked && revertedIndex > -1) {
+                nic.checked.splice(revertedIndex, 1);
+            } else if (!isChecked && revertedIndex === -1) {
+                nic.checked.push(activityIndex);
+            }
+        }
+    }
+  }
+}
+</script>
+{% endblock %}

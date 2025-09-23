@@ -1,0 +1,401 @@
+{% extends 'base_dashboard.html' %}
+{% load static %}
+
+{% block page_title %}SAE - Avaliação de Enfermagem{% endblock %}
+
+{% block dashboard_content %}
+<style>
+  /* Pequenos utilitários para esta página (sem Tailwind) */
+  .sae-header{padding-bottom:1rem;margin-bottom:1.5rem;border-bottom:1px solid rgba(0,0,0,.08);}
+  .sae-progress{height:8px;background:#e5e7eb;border-radius:6px;overflow:hidden;margin-top:.5rem;}
+  .sae-progress__bar{height:100%;background:#6366F1;width:0%;}
+  .row-between{display:flex;justify-content:space-between;align-items:center;gap:1rem;}
+  .grid-nanda{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;}
+  .card{border:1px solid rgba(0,0,0,.08);border-radius:12px;padding:12px;background:#fff;}
+  .mt-2{margin-top:.5rem}.mt-3{margin-top:.75rem}.mt-4{margin-top:1rem}.mb-3{margin-bottom:.75rem}.mb-4{margin-bottom:1rem}
+  .text-muted{color:#6b7280}.text-small{font-size:.9rem}.text-xs{font-size:.8rem}
+
+  /* === do seu snippet original === */
+  .body-part { cursor: pointer; fill: #E0E7FF; stroke: #6366F1; stroke-width: 1.5; transition: fill 0.2s; }
+  .body-part:hover, .body-part.selected { fill: #6366F1; }
+  .wizard-nav-item { display: block; width: 100%; text-align: left; padding: 0.75rem 1rem; border: 1px solid #D1D5DB; border-radius: 0.5rem; background-color: #FFFFFF; transition: all 0.2s ease-in-out; }
+  .wizard-nav-item:hover { background-color: #F9FAFB; border-color: #6366F1; }
+  .wizard-nav-item.selected { background-color: #4338CA; border-color: #4338CA; color: #FFFFFF; font-weight: 600; }
+  .achado-label { display: flex; align-items: start; gap: .75rem; width: 100%; padding: 0.5rem 0.75rem; border-radius: 0.375rem; cursor: pointer; }
+  .achado-label:hover { background-color: #F9FAFB; }
+  [x-cloak] { display: none !important; }
+
+  /* === SAE Wizard layout fix (PRECISA destes nomes de classe no HTML) === */
+  .sae-grid{display:block}
+  @media (min-width: 992px){
+    .sae-grid{display:grid;grid-template-columns:260px minmax(0,1fr);gap:2rem;align-items:start;}
+  }
+  .sae-left{position:sticky;top:24px}
+  .sae-left .sae-figure{max-width:220px;border:1px solid rgba(0,0,0,.1);border-radius:10px;padding:8px;margin:0 auto}
+  .sae-right{min-width:0;border-left:1px solid rgba(0,0,0,.08);padding-left:2rem}
+  .sae-chips{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.75rem}
+  .sae-chip{font-size:.875rem;padding:.25rem .5rem;border-radius:999px;background:#EEF2FF;color:#4338CA}
+</style>
+
+<div class="sae-grid"
+     x-data="saeWizard('{{ csrf_token }}', {{ paciente.pk }})"
+     x-init="init()"
+     x-cloak>
+
+  <!-- ESQUERDA: BONECO -->
+  <aside class="sae-left">
+    <div class="sae-figure">
+      <svg viewBox="0 0 200 450" class="w-full h-full">
+        {% for area in areas_corporais %}
+          {% if area.nome == 'Cabeça e Pescoço' %}
+            <g @click="selectBodyPart({{ area.id }}, '{{ area.nome }}')" class="body-part"
+               :class="{'selected': selectedAreaCorporal.id == {{ area.id }}}">
+              <circle cx="100" cy="50" r="30"/>
+              <rect x="90" y="80" width="20" height="20"/>
+            </g>
+          {% endif %}
+          {% if area.nome == 'Tórax' %}
+            <g @click="selectBodyPart({{ area.id }}, '{{ area.nome }}')" class="body-part"
+               :class="{'selected': selectedAreaCorporal.id == {{ area.id }}}">
+              <path d="M 70 100 L 130 100 L 120 180 L 80 180 Z"/>
+            </g>
+          {% endif %}
+          {% if area.nome == 'Abdômen' %}
+            <g @click="selectBodyPart({{ area.id }}, '{{ area.nome }}')" class="body-part"
+               :class="{'selected': selectedAreaCorporal.id == {{ area.id }}}">
+              <rect x="80" y="180" width="40" height="50"/>
+            </g>
+          {% endif %}
+          {% if area.nome == 'Membros Superiores' %}
+            <g @click="selectBodyPart({{ area.id }}, '{{ area.nome }}')" class="body-part"
+               :class="{'selected': selectedAreaCorporal.id == {{ area.id }}}">
+              <path d="M 70 100 L 50 200 L 60 200 L 80 110 Z"/>
+              <path d="M 130 100 L 150 200 L 140 200 L 120 110 Z"/>
+            </g>
+          {% endif %}
+          {% if area.nome == 'Membros Inferiores' %}
+            <g @click="selectBodyPart({{ area.id }}, '{{ area.nome }}')" class="body-part"
+               :class="{'selected': selectedAreaCorporal.id == {{ area.id }}}">
+              <path d="M 80 230 L 70 380 L 90 380 L 95 230 Z"/>
+              <path d="M 120 230 L 130 380 L 110 380 L 105 230 Z"/>
+            </g>
+          {% endif %}
+        {% endfor %}
+      </svg>
+    </div>
+    <p class="mt-2 text-small text-muted" style="text-align:center;">
+      <template x-if="selectedAreaCorporal.id">
+        <span>Área selecionada: <strong x-text="selectedAreaCorporal.nome"></strong></span>
+      </template>
+      <template x-if="!selectedAreaCorporal.id">
+        <span>Clique em uma área do boneco</span>
+      </template>
+    </p>
+  </aside>
+
+  <!-- DIREITA: ETAPAS -->
+  <section class="sae-right">
+
+    <!-- Cabeçalho da página -->
+    <div class="sae-header">
+      <h2 style="font-size:1.5rem;font-weight:700;color:#111827;margin:0;">
+        Avaliação de <span style="color:#4F46E5">{{ paciente.nome }}</span>
+      </h2>
+      <p class="text-muted" x-text="stepTitle"></p>
+      <div class="sae-progress"><div class="sae-progress__bar" :style="`width:${Math.min(((currentStep-1)/4)*100,100)}%`"></div></div>
+    </div>
+
+    <!-- chips de contexto -->
+    <div class="sae-chips">
+      <template x-if="selectedAreaCorporal.id"><span class="sae-chip">Área: <strong x-text="selectedAreaCorporal.nome"></strong></span></template>
+      <template x-if="selectedTipoExame"><span class="sae-chip">Exame: <strong x-text="mapTipoExame(selectedTipoExame)"></strong></span></template>
+      <template x-if="selectedAchadosIds.length"><span class="sae-chip"><strong x-text="selectedAchadosIds.length"></strong> achado(s)</span></template>
+    </div>
+
+    <!-- ETAPA 2: Tipo de Exame -->
+    <template x-if="currentStep === 2">
+      <div>
+        <h3 class="mb-3" style="font-weight:600;">2. Tipo de Exame</h3>
+        <div class="grid-nanda">
+          <template x-for="exame in tiposExame" :key="exame.id">
+            <button type="button"
+                    @click="selectTipoExame(exame.id)"
+                    class="wizard-nav-item"
+                    :class="{'selected': selectedTipoExame === exame.id}">
+              <span><i class="fa" :class="exame.icon"></i> <span x-text="exame.nome"></span></span>
+            </button>
+          </template>
+        </div>
+      </div>
+    </template>
+
+    <!-- ETAPA 3: Áreas específicas e Achados -->
+    <template x-if="currentStep >= 3">
+      <div class="mt-3">
+        <h3 class="mb-3" style="font-weight:600;">3. Achados Clínicos</h3>
+        <div class="card">
+          <template x-for="area in areasEspecificas" :key="area.id">
+            <div class="mb-3">
+              <button type="button"
+                      @click="selectAreaEspecifica(area.id, area.nome)"
+                      class="wizard-nav-item"
+                      :class="{'selected': selectedAreaEspecifica.id===area.id}">
+                <span x-text="area.nome"></span>
+              </button>
+
+              <div x-show="selectedAreaEspecifica.id===area.id">
+                <div x-show="loadingAchados" class="mt-2 text-muted">Carregando...</div>
+                <div x-show="!loadingAchados" class="mt-2">
+                  <template x-for="achado in getCachedAchados(area.id)" :key="achado.id">
+                    <label class="achado-label">
+                      <input type="checkbox" :value="achado.id" x-model="selectedAchadosIds">
+                      <span x-text="achado.descricao"></span>
+                    </label>
+                  </template>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <div class="mt-3" style="text-align:right" x-show="selectedAchadosIds.length > 0">
+          <button type="button" @click="getNANDAsuggestions()" class="wizard-nav-item" style="display:inline-block;width:auto;">
+            Sugerir Diagnósticos <i class="fas fa-arrow-right" style="margin-left:.5rem;"></i>
+          </button>
+        </div>
+      </div>
+    </template>
+
+    <!-- ETAPA 4: Diagnósticos NANDA sugeridos -->
+    <template x-if="currentStep === 4">
+      <div class="mt-3">
+        <h3 class="mb-3" style="font-weight:600;">4. Diagnósticos sugeridos</h3>
+        <div x-show="loadingNanda" class="text-muted">Gerando sugestões...</div>
+        <div x-show="!loadingNanda" class="grid-nanda">
+          <template x-for="n in suggestedNANDAs" :key="n.id">
+            <button type="button" class="wizard-nav-item" @click="selectNANDA(n)">
+              <div style="font-weight:600;" x-text="safeJoin(n.codigo, n.titulo)"></div>
+              <div class="text-small text-muted" x-text="n.definicao"></div>
+            </button>
+          </template>
+        </div>
+        <div class="mt-3">
+          <button class="wizard-nav-item" style="display:inline-block;width:auto;" @click="prevStep()">
+            <i class="fa fa-arrow-left" style="margin-right:.5rem;"></i>Voltar
+          </button>
+        </div>
+      </div>
+    </template>
+
+    <!-- ETAPA 5: Plano de Cuidados -->
+    <template x-if="currentStep === 5">
+      <div class="mt-3">
+        <h3 class="mb-3" style="font-weight:600;">5. Plano de cuidados</h3>
+        <div x-show="loadingPlan" class="text-muted">Carregando plano...</div>
+        <div x-show="!loadingPlan" class="mt-2">
+          <template x-for="noc in carePlan" :key="noc.id">
+            <div class="card mt-3">
+              <div class="row-between">
+                <div style="font-weight:600;" x-text="safeJoin(noc.codigo, noc.titulo)"></div>
+                <div class="text-xs text-muted">Progresso: <span x-text="Math.round(getNocProgress(noc.id)) + '%'"></span></div>
+              </div>
+              <div class="sae-progress mt-2"><div class="sae-progress__bar" :style="`width:${getNocProgress(noc.id)}%`"></div></div>
+
+              <div class="mt-3">
+                <template x-for="nic in noc.intervencoes_nic" :key="nic.id">
+                  <div class="card mt-2">
+                    <div class="row-between">
+                      <div style="font-weight:500;" x-text="safeJoin(nic.codigo, nic.titulo)"></div>
+                      <div class="text-xs text-muted" x-text="Math.round(getNicProgress(nic.id)) + '%'"></div>
+                    </div>
+                    <div class="mt-2">
+                      <template x-for="(atividade, idx) in (nic.atividades || [])" :key="idx">
+                        <label class="achado-label">
+                          <input type="checkbox"
+                                 @change="toggleActivity(nic.id, idx)"
+                                 :checked="carePlanProgress[nic.id]?.checked?.includes(idx)">
+                          <span class="text-small" x-text="activityText(atividade)"></span>
+                        </label>
+                      </template>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <div class="mt-3 row-between">
+          <button class="wizard-nav-item" style="display:inline-block;width:auto;" @click="prevStep()">
+            <i class="fa fa-arrow-left" style="margin-right:.5rem;"></i>Voltar
+          </button>
+          <button class="wizard-nav-item" style="display:inline-block;width:auto;background:#4F46E5;border-color:#4F46E5;color:#fff" @click="saveFullAssessment()">
+            Salvar avaliação
+          </button>
+        </div>
+      </div>
+    </template>
+
+  </section>
+</div>
+
+<script>
+  // A base já carrega o Alpine. Não inclua outro <script> do Alpine nesta página.
+  function saeWizard(csrfToken, pacienteId) {
+    return {
+      // Estado
+      currentStep: 1,
+      stepTitle: '1. Escolha uma área no boneco',
+      selectedAreaCorporal: { id: null, nome: '' },
+      tiposExame: [
+        { id: 'INSPECAO', nome: 'Inspeção', icon: 'fa-eye' },
+        { id: 'PALPACAO', nome: 'Palpação', icon: 'fa-hand-paper' },
+        { id: 'AUSCULTA', nome: 'Ausculta', icon: 'fa-stethoscope' },
+        { id: 'PERCUSSAO', nome: 'Percussão', icon: 'fa-hand-pointer' }
+      ],
+      selectedTipoExame: null,
+      areasEspecificas: [],
+      selectedAreaEspecifica: { id: null, nome: '' },
+      achadosCache: {},            // key: `${areaId}_${tipo}` -> [achados]
+      selectedAchadosIds: [],
+      suggestedNANDAs: [],
+      selectedNANDA: null,
+      carePlan: [],
+      carePlanProgress: {},
+      loadingAchados: false,
+      loadingNanda: false,
+      loadingPlan: false,
+
+      // Helpers para texto (evita undefined e [object Object])
+      mapTipoExame(id){ const t = this.tiposExame.find(x => x.id === id); return t ? t.nome : id; },
+      safeJoin(a,b){ return [a,b].filter(Boolean).join(' - '); },
+      activityText(a){ return (typeof a === 'string') ? a : (a && a.descricao ? a.descricao : ''); },
+
+      init(){
+        this.$watch('currentStep', s => {
+          const titles = {
+            1: '1. Escolha uma área no boneco',
+            2: '2. Selecione o tipo de exame',
+            3: '3. Marque os achados clínicos',
+            4: '4. Selecione o diagnóstico NANDA sugerido',
+            5: '5. Monte o Plano de Cuidados',
+          };
+          this.stepTitle = titles[s] || '';
+        });
+      },
+
+      // Fluxo
+      async selectBodyPart(id, nome){
+        this.selectedAreaCorporal = { id, nome };
+        this.selectedTipoExame = null;
+        this.selectedAreaEspecifica = { id: null, nome: '' };
+        this.selectedAchadosIds = [];
+        const response = await fetch(`/hospital/api/areas-especificas/${id}/`);
+        this.areasEspecificas = await response.json();
+        this.currentStep = 2;
+      },
+
+      selectTipoExame(tipo){
+        this.selectedTipoExame = tipo;
+        this.selectedAreaEspecifica = { id: null, nome: '' };
+        this.selectedAchadosIds = [];
+        this.currentStep = 3;
+      },
+
+      async selectAreaEspecifica(id, nome){
+        if (!this.selectedTipoExame) { alert('Selecione um tipo de exame.'); return; }
+        this.selectedAreaEspecifica = { id, nome };
+        const key = `${id}_${this.selectedTipoExame}`;
+        if (!this.achadosCache[key]) {
+          this.loadingAchados = true;
+          const response = await fetch(`/hospital/api/achados-clinicos/${id}/${this.selectedTipoExame}/`);
+          this.achadosCache[key] = await response.json();
+          this.loadingAchados = false;
+        }
+      },
+
+      getCachedAchados(areaId){
+        const key = `${areaId}_${this.selectedTipoExame}`;
+        return this.achadosCache[key] || [];
+      },
+
+      async getNANDAsuggestions(){
+        this.loadingNanda = true;
+        const formData = new FormData();
+        this.selectedAchadosIds.forEach(id => formData.append('achados_ids[]', id));
+        const response = await fetch(`/hospital/api/sugerir-nanda/`, {
+          method: 'POST',
+          headers: { 'X-CSRFToken': csrfToken },
+          body: formData
+        });
+        this.suggestedNANDAs = await response.json();
+        this.loadingNanda = false;
+        this.currentStep = 4;
+      },
+
+      async selectNANDA(nanda){
+        this.selectedNANDA = nanda;
+        this.loadingPlan = true;
+        const response = await fetch(`/hospital/api/plano-cuidados/${nanda.id}/`);
+        this.carePlan = await response.json();
+        // Inicializa progresso
+        this.carePlanProgress = {};
+        this.carePlan.forEach(noc => {
+          (noc.intervencoes_nic || []).forEach(nic => {
+            this.carePlanProgress[nic.id] = { total: (nic.atividades || []).length, checked: [] };
+          });
+        });
+        this.loadingPlan = false;
+        this.currentStep = 5;
+      },
+
+      toggleActivity(nicId, idx){
+        const bucket = this.carePlanProgress[nicId];
+        if (!bucket) return;
+        const i = bucket.checked.indexOf(idx);
+        if (i >= 0) bucket.checked.splice(i, 1); else bucket.checked.push(idx);
+      },
+
+      getNicProgress(nicId){
+        const p = this.carePlanProgress[nicId];
+        if (!p || p.total === 0) return 0;
+        return (p.checked.length / p.total) * 100;
+      },
+
+      getNocProgress(nocId){
+        const noc = this.carePlan.find(n => n.id === nocId);
+        if (!noc || (noc.intervencoes_nic || []).length === 0) return 0;
+        let total = 0;
+        (noc.intervencoes_nic || []).forEach(nic => { total += this.getNicProgress(nic.id); });
+        return total / noc.intervencoes_nic.length;
+      },
+
+      async saveFullAssessment(){
+        const finalData = {
+          selectedAchadosIds: this.selectedAchadosIds,
+          selectedNANDA_id: this.selectedNANDA?.id || null,
+          carePlanProgress: this.carePlanProgress,
+        };
+        try{
+          const response = await fetch(window.location.pathname, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+            body: JSON.stringify(finalData)
+          });
+          const result = await response.json();
+          if (result.status === 'success') {
+            alert(result.message);
+            window.location.href = "{% url 'gestao_hospitalar:sae_dashboard' %}";
+          } else {
+            throw new Error(result.message || 'Erro desconhecido');
+          }
+        } catch (error){
+          alert('Falha ao salvar o plano de cuidados: ' + error.message);
+        }
+      },
+
+      prevStep(){ if (this.currentStep > 1) this.currentStep--; },
+    }
+  }
+</script>
+{% endblock %}

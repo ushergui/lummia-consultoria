@@ -1,7 +1,15 @@
 from django import forms
 from .models import Ala, Quarto, Leito, Paciente
 from django_select2.forms import Select2Widget, Select2MultipleWidget
-from .models import AvaliacaoFugulin
+from .models import AvaliacaoFugulin, AvaliacaoSAE
+
+
+class AvaliacaoSAEForm(forms.ModelForm):
+    class Meta:
+        model = AvaliacaoSAE
+        # Incluímos apenas os campos que serão salvos no final do processo
+        # Os achados, NOCs e NICs serão tratados na view.
+        fields = ['diagnostico_nanda_selecionado']
 
 class AvaliacaoFugulinForm(forms.ModelForm):
     # 1. Estado Mental

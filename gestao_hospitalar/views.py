@@ -1,16 +1,105 @@
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.views.generic import TemplateView, ListView, CreateView, UpdateView, DeleteView
-from .models import Ala, AvaliacaoFugulin, Quarto, Leito, Paciente
-from .forms import AlaForm, QuartoForm, LeitoForm, PacienteForm, AvaliacaoFugulinForm
+from django.http import JsonResponse, Http404
+from django.views.generic import TemplateView, ListView, CreateView, UpdateView, DeleteView, DetailView
+from .models import (
+    Ala, AvaliacaoFugulin, Quarto, Leito, Paciente, AreaCorporal, 
+    AreaEspecifica, AchadoClinico, DiagnosticoNANDA, ResultadoNOC, 
+    IntervencaoNIC, AtividadeNIC, AvaliacaoSAE, PlanoCuidado
+)
+from .forms import (
+    AlaForm, QuartoForm, LeitoForm, PacienteForm, 
+    AvaliacaoFugulinForm, AvaliacaoSAEForm
+)
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
 from django.utils import timezone
-
+import json
+from django.db import transaction
+from django.views.decorators.csrf import csrf_exempt
 # Este Mixin agora serve apenas para verificar a permissão do usuário.
 class AdminClienteRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
     def test_func(self):
         return self.request.user.tipo_perfil in ['ADMIN_CLIENTE', 'ADMINISTRADOR']
+        
+
+
+
+class SAEDashboardView(AdminClienteRequiredMixin, ListView):
+    model = Paciente
+    template_name = 'gestao_hospitalar/sae_dashboard.html'
+    context_object_name = 'pacientes'
+    def get_queryset(self):
+        return Paciente.objects.filter(empresa=self.request.user.empresa, leito__isnull=False).select_related('leito', 'leito__quarto', 'leito__quarto__ala').order_by('nome')
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        for paciente in context['pacientes']:
+            paciente.ultima_sae = paciente.avaliacoes_sae.order_by('-data_avaliacao').first()
+        return context
+
+
+
+# ==========================================================
+# API INTERNA (VIEWS QUE RETORNAM JSON PARA O FRONTEND)
+# ==========================================================
+
+def get_areas_especificas_json(request, area_corporal_id):
+    """ Retorna as áreas específicas de uma área corporal (Ex: Crânio, Face para Cabeça) """
+    areas = AreaEspecifica.objects.filter(area_corporal_id=area_corporal_id).values('id', 'nome')
+    return JsonResponse(list(areas), safe=False)
+
+def get_achados_clinicos_json(request, area_especifica_id, tipo_exame):
+    """ Retorna os achados clínicos para uma área e tipo de exame """
+    achados = AchadoClinico.objects.filter(
+        area_especifica_id=area_especifica_id,
+        tipo_exame=tipo_exame.upper()
+    ).values('id', 'descricao')
+    return JsonResponse(list(achados), safe=False)
+
+def sugerir_nanda_json(request):
+    """ 
+    Recebe uma lista de IDs de achados e sugere os diagnósticos NANDA.
+    O frontend enviará os IDs dos checkboxes marcados.
+    """
+    if request.method == 'POST':
+        achados_ids = request.POST.getlist('achados_ids[]')
+        if not achados_ids:
+            return JsonResponse([], safe=False)
+
+        # Busca diagnósticos distintos associados a QUALQUER um dos achados selecionados
+        diagnosticos = DiagnosticoNANDA.objects.filter(
+            achados_relacionados__id__in=achados_ids
+        ).distinct().values('id', 'codigo', 'titulo', 'definicao')
+        
+        return JsonResponse(list(diagnosticos), safe=False)
+    return JsonResponse({'error': 'Método inválido'}, status=400)
+
+def get_plano_cuidados_json(request, nanda_id):
+    """
+    Para um NANDA selecionado, retorna os NOCs e NICs (com suas atividades) associados.
+    """
+    diagnostico = get_object_or_404(DiagnosticoNANDA, pk=nanda_id)
+    
+    plano = []
+    # Itera sobre os resultados (NOC) ligados ao diagnóstico NANDA
+    for noc in diagnostico.resultados_noc.all():
+        noc_data = {
+            'id': noc.id,
+            'titulo': noc.titulo,
+            'definicao': noc.definicao,
+            'intervencoes_nic': []
+        }
+        # Para cada NOC, itera sobre as intervenções (NIC) ligadas a ele
+        for nic in noc.intervencoes_nic.all():
+            nic_data = {
+                'id': nic.id,
+                'titulo': nic.titulo,
+                'atividades': list(nic.atividades.all().values('id', 'descricao'))
+            }
+            noc_data['intervencoes_nic'].append(nic_data)
+        plano.append(noc_data)
+        
+    return JsonResponse(plano, safe=False)
 
 # === Dashboard ===
 class HospitalDashboardView(AdminClienteRequiredMixin, TemplateView):
@@ -293,3 +382,140 @@ class PacienteAltaView(AdminClienteRequiredMixin, View):
         paciente.leito = None  # Desvincula o paciente do leito
         paciente.save()
         return redirect('gestao_hospitalar:paciente_avaliacao_list')
+    
+class SAEWizardView(AdminClienteRequiredMixin, View):
+    """
+    View principal que controla o fluxo de avaliação da SAE e salva o resultado final.
+    """
+    def get(self, request, paciente_pk):
+        paciente = get_object_or_404(Paciente, pk=paciente_pk, empresa=request.user.empresa)
+        if not paciente.leito:
+            raise Http404("Este paciente não está internado e não pode ser avaliado.")
+        
+        areas_corporais = AreaCorporal.objects.all().order_by('id')
+        context = {
+            'paciente': paciente,
+            'areas_corporais': areas_corporais
+        }
+        return render(request, 'gestao_hospitalar/sae_wizard_form.html', context)
+
+    @transaction.atomic
+    def post(self, request, paciente_pk):
+        """ Salva a avaliação completa da SAE """
+        paciente = get_object_or_404(Paciente, pk=paciente_pk, empresa=request.user.empresa)
+        data = json.loads(request.body)
+
+        # Cria a instância principal da Avaliação SAE
+        avaliacao = AvaliacaoSAE.objects.create(
+            paciente=paciente,
+            avaliador=request.user,
+            diagnostico_nanda_selecionado_id=data.get('selectedNANDA_id'),
+            is_finalizada=True
+        )
+        # Adiciona os achados clínicos selecionados
+        achados_ids = data.get('selectedAchadosIds', [])
+        avaliacao.achados_selecionados.set(achados_ids)
+
+        # Cria o Plano de Cuidados com o progresso das intervenções NIC
+        plano_de_cuidados_data = data.get('carePlanProgress', {})
+        for nic_id, progresso in plano_de_cuidados_data.items():
+            PlanoCuidado.objects.create(
+                avaliacao=avaliacao,
+                intervencao_nic_id=nic_id,
+                progresso_atividades=progresso # Salva o JSON com as atividades marcadas
+            )
+
+        return JsonResponse({'status': 'success', 'message': 'Plano de cuidados salvo com sucesso!'})
+    
+class SAEHistoricoView(AdminClienteRequiredMixin, DetailView):
+    model = Paciente
+    template_name = 'gestao_hospitalar/sae_historico_paciente.html'
+    context_object_name = 'paciente'
+    pk_url_kwarg = 'paciente_pk' # Informa ao Django que o ID na URL é 'paciente_pk'
+
+    def get_queryset(self):
+        return Paciente.objects.filter(empresa=self.request.user.empresa)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        paciente = self.object
+        context['avaliacoes'] = paciente.avaliacoes_sae.all().select_related('avaliador', 'diagnostico_nanda_selecionado')
+        return context
+
+class SAEAvaliacaoDetailView(AdminClienteRequiredMixin, DetailView):
+    model = AvaliacaoSAE
+    template_name = 'gestao_hospitalar/sae_avaliacao_detail.html'
+    context_object_name = 'avaliacao'
+
+    def get_queryset(self):
+        return AvaliacaoSAE.objects.select_related(
+            'paciente', 'avaliador', 'diagnostico_nanda_selecionado'
+        ).filter(paciente__empresa=self.request.user.empresa)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        avaliacao = self.object
+        nanda = avaliacao.diagnostico_nanda_selecionado
+        
+        plan_json = []
+        if nanda:
+            # Busca os NOCs ligados ao NANDA da avaliação
+            nocs = nanda.resultados_noc.prefetch_related('intervencoes_nic__atividades').all()
+
+            for noc in nocs:
+                nic_list = []
+                for nic in noc.intervencoes_nic.all():
+                    # Para cada NIC, busca ou cria o registro de progresso
+                    plano, _ = PlanoCuidado.objects.get_or_create(
+                        avaliacao=avaliacao,
+                        intervencao_nic=nic
+                    )
+                    
+                    nic_list.append({
+                        'id': nic.id,
+                        'codigo': nic.codigo,
+                        'titulo': nic.titulo,
+                        'atividades': list(nic.atividades.values_list('descricao', flat=True)),
+                        'plano_id': plano.id,
+                        # Pega o progresso já salvo no banco
+                        'checked': plano.progresso_atividades.get('checked', []) 
+                    })
+                
+                plan_json.append({
+                    'id': noc.id,
+                    'codigo': noc.codigo,
+                    'titulo': noc.titulo,
+                    'intervencoes': nic_list
+                })
+
+        context['plan_json'] = plan_json
+        return context
+
+
+
+@csrf_exempt
+def toggle_plano_atividade(request, plano_id):
+    if request.method == 'POST':
+        plano = get_object_or_404(PlanoCuidado, pk=plano_id)
+        # Garante que o usuário só pode modificar planos da sua empresa
+        if plano.avaliacao.paciente.empresa != request.user.empresa:
+            return JsonResponse({'status': 'error', 'message': 'Permissão negada.'}, status=403)
+        
+        data = json.loads(request.body)
+        idx = data.get('idx')
+        checked = data.get('checked')
+
+        progresso = plano.progresso_atividades or {'checked': []}
+        
+        if checked:
+            if idx not in progresso['checked']:
+                progresso['checked'].append(idx)
+        else:
+            if idx in progresso['checked']:
+                progresso['checked'].remove(idx)
+
+        plano.progresso_atividades = progresso
+        plano.save()
+        
+        return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'error', 'message': 'Método inválido.'}, status=400)

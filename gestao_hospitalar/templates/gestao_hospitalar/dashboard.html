@@ -54,6 +54,15 @@
             <p class="text-gray-500 mt-1">Gerenciar pacientes, alocação e diagnósticos.</p>
         </div>
     </a>
+    <a href="{% url 'gestao_hospitalar:sae_dashboard' %}" class="bg-indigo-50 border-2 border-indigo-200 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow flex items-center col-span-1 md:col-span-2" style="text-decoration: none;">
+        <div class="flex-shrink-0 w-16 h-16 flex items-center justify-center bg-indigo-100 rounded-full">
+            <i class="fas fa-file-medical-alt fa-2x text-indigo-500"></i>
+        </div>
+        <div class="ml-6">
+            <h2 class="text-xl font-semibold text-indigo-800">SAE - Avaliação de Enfermagem</h2>
+            <p class="text-indigo-700 mt-1">Iniciar nova avaliação ou acompanhar planos de cuidados.</p>
+        </div>
+    </a>
 
 </div>
 {% endblock %}

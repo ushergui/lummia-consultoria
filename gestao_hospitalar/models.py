@@ -138,3 +138,111 @@ class AvaliacaoFugulin(models.Model):
     def save(self, *args, **kwargs):
         self.calcular_e_definir_categoria()
         super().save(*args, **kwargs)
+
+class AreaCorporal(models.Model):
+    """ Ex: Cabeça, Tórax, Abdômen """
+    nome = models.CharField(max_length=100, unique=True)
+    
+    def __str__(self):
+        return self.nome
+
+class AreaEspecifica(models.Model):
+    """ Ex: Crânio, Couro Cabeludo (pertencem à Cabeça) """
+    nome = models.CharField(max_length=100)
+    area_corporal = models.ForeignKey(AreaCorporal, on_delete=models.CASCADE, related_name='areas_especificas')
+
+    def __str__(self):
+        return f"{self.area_corporal.nome} - {self.nome}"
+
+class AchadoClinico(models.Model):
+    """ Ex: Assimetria, Presença de lesões (pertencem ao Crânio) """
+    descricao = models.CharField(max_length=255)
+    area_especifica = models.ForeignKey(AreaEspecifica, on_delete=models.CASCADE, related_name='achados_clinicos')
+    # O tipo de exame é um atributo do achado, pois um achado é resultado de um tipo de exame
+    TIPO_EXAME_CHOICES = [('INSPECAO', 'Inspeção'), ('PALPACAO', 'Palpação'), ('AUSCULTA', 'Ausculta'), ('PERCUSSAO', 'Percussão')]
+    tipo_exame = models.CharField(max_length=10, choices=TIPO_EXAME_CHOICES)
+
+    def __str__(self):
+        return self.descricao
+
+# ====================================================================
+# 2. MODELOS PARA AS TAXONOMIAS NANDA-I, NOC, NIC
+# Baseado no livro "Ligações NANDA, NOC e NIC"
+# ====================================================================
+
+class DiagnosticoNANDA(models.Model):
+    codigo = models.CharField(max_length=20, unique=True)
+    titulo = models.CharField(max_length=255)
+    definicao = models.TextField()
+    # Mapeamento: Um achado clínico pode sugerir vários diagnósticos NANDA
+    achados_relacionados = models.ManyToManyField(AchadoClinico, related_name='diagnosticos_sugeridos', blank=True)
+
+    def __str__(self):
+        return f"{self.codigo} - {self.titulo}"
+
+class ResultadoNOC(models.Model):
+    codigo = models.CharField(max_length=20, unique=True)
+    titulo = models.CharField(max_length=255)
+    definicao = models.TextField()
+    # Ligação: Um diagnóstico NANDA pode ter vários resultados NOC esperados
+    diagnosticos_nanda = models.ManyToManyField(DiagnosticoNANDA, related_name='resultados_noc', blank=True)
+
+    def __str__(self):
+        return f"{self.codigo} - {self.titulo}"
+
+class IntervencaoNIC(models.Model):
+    codigo = models.CharField(max_length=20, unique=True)
+    titulo = models.CharField(max_length=255)
+    definicao = models.TextField()
+    # Ligação: Um resultado NOC é alcançado através de várias intervenções NIC
+    resultados_noc = models.ManyToManyField(ResultadoNOC, related_name='intervencoes_nic', blank=True)
+
+    def __str__(self):
+        return f"{self.codigo} - {self.titulo}"
+
+class AtividadeNIC(models.Model):
+    descricao = models.TextField()
+    intervencao = models.ForeignKey(IntervencaoNIC, on_delete=models.CASCADE, related_name='atividades')
+
+    def __str__(self):
+        # Retorna os primeiros 70 caracteres para não poluir o admin
+        return self.descricao[:70] + '...' if len(self.descricao) > 70 else self.descricao
+
+# ====================================================================
+# 3. MODELOS PARA REGISTRAR A AVALIAÇÃO E O PLANO DE CUIDADOS DO PACIENTE
+# Esta é a parte que será preenchida diariamente e persistida
+# ====================================================================
+
+class AvaliacaoSAE(models.Model):
+    """ Registra uma avaliação completa de um paciente em um determinado dia. """
+    paciente = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name='avaliacoes_sae')
+    avaliador = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    data_avaliacao = models.DateTimeField(default=timezone.now)
+    
+    # Etapa 3: Guarda os achados que o enfermeiro selecionou
+    achados_selecionados = models.ManyToManyField(AchadoClinico, blank=True)
+    
+    # Etapa 5: Guarda o plano de cuidados definido
+    diagnostico_nanda_selecionado = models.ForeignKey(DiagnosticoNANDA, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    is_finalizada = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-data_avaliacao']
+
+    def __str__(self):
+        return f"SAE de {self.paciente.nome} em {self.data_avaliacao.strftime('%d/%m/%Y %H:%M')}"
+
+class PlanoCuidado(models.Model):
+    """ Armazena o progresso de uma intervenção (NIC) para uma avaliação específica. """
+    avaliacao = models.ForeignKey(AvaliacaoSAE, on_delete=models.CASCADE, related_name='plano_de_cuidados')
+    intervencao_nic = models.ForeignKey(IntervencaoNIC, on_delete=models.CASCADE)
+    
+    # JSONField é perfeito para guardar o estado das checkboxes (ID da atividade: True/False)
+    progresso_atividades = models.JSONField(default=dict, blank=True)
+    
+    class Meta:
+        unique_together = ('avaliacao', 'intervencao_nic')
+
+    def __str__(self):
+        return f"Plano para {self.intervencao_nic.titulo} na avaliação de {self.avaliacao.paciente.nome}"

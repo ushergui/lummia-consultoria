@@ -1,0 +1,55 @@
+{% extends 'base_dashboard.html' %}
+{% load static %}
+
+{% block page_title %}Histórico SAE – {{ paciente.nome }}{% endblock %}
+
+{% block dashboard_content %}
+<style>
+  .card{background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:12px;padding:14px;}
+  .table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;}
+  .table th,.table td{padding:.75rem 1rem;text-align:left;}
+  .table thead tr{background:#F3F4F6;}
+  .table tbody tr+tr{border-top:1px solid #e5e7eb;}
+  .btn-row{margin-top:.5rem;display:flex;gap:.5rem;flex-wrap:wrap;}
+  .btn{display:inline-block;padding:.5rem .75rem;border:1px solid #d1d5db;border-radius:8px;background:#fff;text-decoration:none;color:#111827;}
+  .btn-primary{background:#4F46E5;border-color:#4F46E5;color:#fff;}
+  .muted{color:#6b7280;}
+</style>
+
+<h2 style="font-size:1.25rem;font-weight:700;margin-bottom:1rem;">Avaliações registradas de {{ paciente.nome }}</h2>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Data/Hora</th>
+      <th>Avaliador</th>
+      <th>NANDA</th>
+      <th style="width:1%;">Ações</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for av in avaliacoes %}
+      <tr>
+        <td>{{ av.data_avaliacao|date:"d/m/Y H:i" }}</td>
+        <td>{{ av.avaliador.get_full_name|default:av.avaliador.username }}</td>
+        <td>
+          {% if av.diagnostico_nanda_selecionado %}
+            {{ av.diagnostico_nanda_selecionado.codigo }} — {{ av.diagnostico_nanda_selecionado.titulo }}
+          {% else %}
+            <span class="muted">—</span>
+          {% endif %}
+        </td>
+        <td>
+          <a class="btn" href="{% url 'gestao_hospitalar:sae_avaliacao_detail' av.pk %}">Abrir</a>
+        </td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="4" class="muted">Nenhuma avaliação encontrada.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div style="margin-top:1rem;">
+  <a class="btn" href="{% url 'gestao_hospitalar:sae_dashboard' %}">← Voltar ao painel</a>
+</div>
+{% endblock %}
