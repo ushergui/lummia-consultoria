@@ -79,7 +79,6 @@
                 <h1>{% block page_title %}{% endblock %}</h1>
                 <div class="user-profile">
                     <span>{{ user.first_name|default:user.username }} ({{ user.get_tipo_perfil_display }})</span>
-                    <img src="https://i.pravatar.cc/45?u={{ user.username }}" alt="Avatar do Usuário">
                 </div>
             </header>
             <main class="dashboard-content">
