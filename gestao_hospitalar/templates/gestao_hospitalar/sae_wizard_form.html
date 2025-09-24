@@ -414,7 +414,6 @@
           });
           const result = await response.json();
           if (result.status === 'success') {
-            alert(result.message);
             window.location.href = "{% url 'gestao_hospitalar:sae_dashboard' %}";
           } else {
             throw new Error(result.message || 'Erro desconhecido');
