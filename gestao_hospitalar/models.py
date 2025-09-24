@@ -139,31 +139,35 @@ class AvaliacaoFugulin(models.Model):
         self.calcular_e_definir_categoria()
         super().save(*args, **kwargs)
 
+# ====================================================================
+# NOVOS MODELOS E AJUSTES PARA A FERRAMENTA SAE
+# ====================================================================
+
+# --- Estrutura do Exame Físico ---
+
 class AreaCorporal(models.Model):
-    """ Ex: Cabeça, Tórax, Abdômen """
-    nome = models.CharField(max_length=100, unique=True)
-    
-    def __str__(self):
-        return self.nome
+    nome = models.CharField(max_length=100, unique=True, help_text="Ex: Cabeça e Pescoço, Tórax...")
+    def __str__(self): return self.nome
+
+class TipoExame(models.Model):
+    nome = models.CharField(max_length=100, unique=True, help_text="Ex: Inspeção, Palpação...")
+    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name="tipos_exame")
+    def __str__(self): return self.nome
+    class Meta: unique_together = ('nome', 'empresa')
 
 class AreaEspecifica(models.Model):
-    """ Ex: Crânio, Couro Cabeludo (pertencem à Cabeça) """
-    nome = models.CharField(max_length=100)
+    nome = models.CharField(max_length=100, help_text="Ex: Crânio, Couro Cabeludo...")
     area_corporal = models.ForeignKey(AreaCorporal, on_delete=models.CASCADE, related_name='areas_especificas')
-
-    def __str__(self):
-        return f"{self.area_corporal.nome} - {self.nome}"
+    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name="areas_especificas")
+    def __str__(self): return f"{self.area_corporal.nome} - {self.nome}"
+    class Meta: unique_together = ('nome', 'area_corporal', 'empresa')
 
 class AchadoClinico(models.Model):
-    """ Ex: Assimetria, Presença de lesões (pertencem ao Crânio) """
-    descricao = models.CharField(max_length=255)
+    descricao = models.CharField(max_length=255, help_text="Ex: Assimetria, Presença de lesões...")
     area_especifica = models.ForeignKey(AreaEspecifica, on_delete=models.CASCADE, related_name='achados_clinicos')
-    # O tipo de exame é um atributo do achado, pois um achado é resultado de um tipo de exame
-    TIPO_EXAME_CHOICES = [('INSPECAO', 'Inspeção'), ('PALPACAO', 'Palpação'), ('AUSCULTA', 'Ausculta'), ('PERCUSSAO', 'Percussão')]
-    tipo_exame = models.CharField(max_length=10, choices=TIPO_EXAME_CHOICES)
-
-    def __str__(self):
-        return self.descricao
+    tipo_exame = models.ForeignKey(TipoExame, on_delete=models.CASCADE, related_name='achados_clinicos')
+    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name="achados_clinicos")
+    def __str__(self): return self.descricao
 
 # ====================================================================
 # 2. MODELOS PARA AS TAXONOMIAS NANDA-I, NOC, NIC
@@ -171,42 +175,37 @@ class AchadoClinico(models.Model):
 # ====================================================================
 
 class DiagnosticoNANDA(models.Model):
-    codigo = models.CharField(max_length=20, unique=True)
+    codigo = models.CharField(max_length=20)
     titulo = models.CharField(max_length=255)
     definicao = models.TextField()
-    # Mapeamento: Um achado clínico pode sugerir vários diagnósticos NANDA
+    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name="diagnosticos_nanda")
     achados_relacionados = models.ManyToManyField(AchadoClinico, related_name='diagnosticos_sugeridos', blank=True)
-
-    def __str__(self):
-        return f"{self.codigo} - {self.titulo}"
+    def __str__(self): return f"{self.codigo} - {self.titulo}"
+    class Meta: unique_together = ('codigo', 'empresa')
 
 class ResultadoNOC(models.Model):
-    codigo = models.CharField(max_length=20, unique=True)
+    codigo = models.CharField(max_length=20)
     titulo = models.CharField(max_length=255)
     definicao = models.TextField()
-    # Ligação: Um diagnóstico NANDA pode ter vários resultados NOC esperados
+    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name="resultados_noc")
     diagnosticos_nanda = models.ManyToManyField(DiagnosticoNANDA, related_name='resultados_noc', blank=True)
-
-    def __str__(self):
-        return f"{self.codigo} - {self.titulo}"
+    def __str__(self): return f"{self.codigo} - {self.titulo}"
+    class Meta: unique_together = ('codigo', 'empresa')
 
 class IntervencaoNIC(models.Model):
-    codigo = models.CharField(max_length=20, unique=True)
+    codigo = models.CharField(max_length=20)
     titulo = models.CharField(max_length=255)
     definicao = models.TextField()
-    # Ligação: Um resultado NOC é alcançado através de várias intervenções NIC
+    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE, related_name="intervencoes_nic")
     resultados_noc = models.ManyToManyField(ResultadoNOC, related_name='intervencoes_nic', blank=True)
-
-    def __str__(self):
-        return f"{self.codigo} - {self.titulo}"
+    def __str__(self): return f"{self.codigo} - {self.titulo}"
+    class Meta: unique_together = ('codigo', 'empresa')
 
 class AtividadeNIC(models.Model):
     descricao = models.TextField()
     intervencao = models.ForeignKey(IntervencaoNIC, on_delete=models.CASCADE, related_name='atividades')
-
-    def __str__(self):
-        # Retorna os primeiros 70 caracteres para não poluir o admin
-        return self.descricao[:70] + '...' if len(self.descricao) > 70 else self.descricao
+    # A empresa da atividade é determinada pela intervenção NIC a que pertence.
+    def __str__(self): return self.descricao[:70] + '...' if len(self.descricao) > 70 else self.descricao
 
 # ====================================================================
 # 3. MODELOS PARA REGISTRAR A AVALIAÇÃO E O PLANO DE CUIDADOS DO PACIENTE
@@ -214,35 +213,18 @@ class AtividadeNIC(models.Model):
 # ====================================================================
 
 class AvaliacaoSAE(models.Model):
-    """ Registra uma avaliação completa de um paciente em um determinado dia. """
     paciente = models.ForeignKey(Paciente, on_delete=models.CASCADE, related_name='avaliacoes_sae')
     avaliador = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     data_avaliacao = models.DateTimeField(default=timezone.now)
-    
-    # Etapa 3: Guarda os achados que o enfermeiro selecionou
     achados_selecionados = models.ManyToManyField(AchadoClinico, blank=True)
-    
-    # Etapa 5: Guarda o plano de cuidados definido
     diagnostico_nanda_selecionado = models.ForeignKey(DiagnosticoNANDA, on_delete=models.SET_NULL, null=True, blank=True)
-    
     is_finalizada = models.BooleanField(default=False)
-
-    class Meta:
-        ordering = ['-data_avaliacao']
-
-    def __str__(self):
-        return f"SAE de {self.paciente.nome} em {self.data_avaliacao.strftime('%d/%m/%Y %H:%M')}"
+    class Meta: ordering = ['-data_avaliacao']
+    def __str__(self): return f"SAE de {self.paciente.nome} em {self.data_avaliacao.strftime('%d/%m/%Y %H:%M')}"
 
 class PlanoCuidado(models.Model):
-    """ Armazena o progresso de uma intervenção (NIC) para uma avaliação específica. """
     avaliacao = models.ForeignKey(AvaliacaoSAE, on_delete=models.CASCADE, related_name='plano_de_cuidados')
     intervencao_nic = models.ForeignKey(IntervencaoNIC, on_delete=models.CASCADE)
-    
-    # JSONField é perfeito para guardar o estado das checkboxes (ID da atividade: True/False)
     progresso_atividades = models.JSONField(default=dict, blank=True)
-    
-    class Meta:
-        unique_together = ('avaliacao', 'intervencao_nic')
-
-    def __str__(self):
-        return f"Plano para {self.intervencao_nic.titulo} na avaliação de {self.avaliacao.paciente.nome}"
+    class Meta: unique_together = ('avaliacao', 'intervencao_nic')
+    def __str__(self): return f"Plano para {self.intervencao_nic.titulo} na avaliação de {self.avaliacao.paciente.nome}"

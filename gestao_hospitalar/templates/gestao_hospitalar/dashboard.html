@@ -6,63 +6,67 @@
 {% block dashboard_content %}
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-    <a href="{% url 'gestao_hospitalar:paciente_avaliacao_list' %}" class="bg-indigo-50 border-2 border-indigo-200 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow flex items-center col-span-1 md:col-span-2" style="text-decoration: none;">
-        <div class="flex-shrink-0 w-16 h-16 flex items-center justify-center bg-indigo-100 rounded-full">
-            <i class="fas fa-clipboard-list fa-2x text-indigo-500"></i>
-        </div>
-        <div class="ml-6">
-            <h2 class="text-xl font-semibold text-indigo-800">Painel de Classificação de Pacientes</h2>
-            <p class="text-indigo-700 mt-1">Realizar e acompanhar a avaliação diária da demanda de cuidados de enfermagem.</p>
-        </div>
-    </a>
-    <a href="{% url 'gestao_hospitalar:ala_list' %}" class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow flex items-center" style="text-decoration: none;">
-        <div class="flex-shrink-0 w-16 h-16 flex items-center justify-center bg-blue-100 rounded-full">
-            <i class="fas fa-hospital-alt fa-2x text-blue-500"></i>
+    <a href="{% url 'gestao_hospitalar:sae_parametrizacao' %}" class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow flex items-center" style="text-decoration: none;">
+        <div class="flex-shrink-0 w-16 h-16 flex items-center justify-center bg-gray-100 rounded-full">
+            <i class="fas fa-cogs fa-2x text-gray-500"></i>
         </div>
         <div class="ml-4">
-            <h2 class="text-xl font-semibold text-gray-800">Alas</h2>
-            <p class="text-gray-500 mt-1">Gerenciar as alas da instituição.</p>
+            <h2 class="text-xl font-semibold text-gray-800">Parametrização SAE</h2>
+            <p class="text-gray-500 mt-1">Gerenciar dados base do exame físico e taxonomias.</p>
         </div>
     </a>
 
-    <a href="{% url 'gestao_hospitalar:quarto_list' %}" class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow flex items-center" style="text-decoration: none;">
-        <div class="flex-shrink-0 w-16 h-16 flex items-center justify-center bg-green-100 rounded-full">
-            <i class="fas fa-door-open fa-2x text-green-500"></i>
-        </div>
-        <div class="ml-4">
-            <h2 class="text-xl font-semibold text-gray-800">Quartos</h2>
-            <p class="text-gray-500 mt-1">Cadastrar e organizar os quartos por ala.</p>
-        </div>
-    </a>
+    {% if user.tipo_perfil == 'ADMIN_CLIENTE' %}
+        <a href="{% url 'gestao_hospitalar:sae_dashboard' %}" class="bg-indigo-50 border-2 border-indigo-200 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow flex items-center" style="text-decoration: none;">
+            <div class="flex-shrink-0 w-16 h-16 flex items-center justify-center bg-indigo-100 rounded-full">
+                <i class="fas fa-file-medical-alt fa-2x text-indigo-500"></i>
+            </div>
+            <div class="ml-6">
+                <h2 class="text-xl font-semibold text-indigo-800">SAE - Avaliação de Enfermagem</h2>
+                <p class="text-indigo-700 mt-1">Iniciar nova avaliação ou acompanhar planos de cuidados.</p>
+            </div>
+        </a>
 
-    <a href="{% url 'gestao_hospitalar:leito_list' %}" class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow flex items-center" style="text-decoration: none;">
-        <div class="flex-shrink-0 w-16 h-16 flex items-center justify-center bg-red-100 rounded-full">
-            <i class="fas fa-bed fa-2x text-red-500"></i>
-        </div>
-        <div class="ml-4">
-            <h2 class="text-xl font-semibold text-gray-800">Leitos</h2>
-            <p class="text-gray-500 mt-1">Administrar os leitos disponíveis em cada quarto.</p>
-        </div>
-    </a>
+        <a href="{% url 'gestao_hospitalar:ala_list' %}" class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow flex items-center" style="text-decoration: none;">
+            <div class="flex-shrink-0 w-16 h-16 flex items-center justify-center bg-blue-100 rounded-full">
+                <i class="fas fa-hospital-alt fa-2x text-blue-500"></i>
+            </div>
+            <div class="ml-4">
+                <h2 class="text-xl font-semibold text-gray-800">Alas</h2>
+                <p class="text-gray-500 mt-1">Gerenciar as alas da instituição.</p>
+            </div>
+        </a>
 
-    <a href="{% url 'gestao_hospitalar:paciente_list' %}" class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow flex items-center" style="text-decoration: none;">
-        <div class="flex-shrink-0 w-16 h-16 flex items-center justify-center bg-purple-100 rounded-full">
-            <i class="fas fa-user-injured fa-2x text-purple-500"></i>
-        </div>
-        <div class="ml-4">
-            <h2 class="text-xl font-semibold text-gray-800">Pacientes</h2>
-            <p class="text-gray-500 mt-1">Gerenciar pacientes, alocação e diagnósticos.</p>
-        </div>
-    </a>
-    <a href="{% url 'gestao_hospitalar:sae_dashboard' %}" class="bg-indigo-50 border-2 border-indigo-200 p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow flex items-center col-span-1 md:col-span-2" style="text-decoration: none;">
-        <div class="flex-shrink-0 w-16 h-16 flex items-center justify-center bg-indigo-100 rounded-full">
-            <i class="fas fa-file-medical-alt fa-2x text-indigo-500"></i>
-        </div>
-        <div class="ml-6">
-            <h2 class="text-xl font-semibold text-indigo-800">SAE - Avaliação de Enfermagem</h2>
-            <p class="text-indigo-700 mt-1">Iniciar nova avaliação ou acompanhar planos de cuidados.</p>
-        </div>
-    </a>
+        <a href="{% url 'gestao_hospitalar:quarto_list' %}" class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow flex items-center" style="text-decoration: none;">
+            <div class="flex-shrink-0 w-16 h-16 flex items-center justify-center bg-green-100 rounded-full">
+                <i class="fas fa-door-open fa-2x text-green-500"></i>
+            </div>
+            <div class="ml-4">
+                <h2 class="text-xl font-semibold text-gray-800">Quartos</h2>
+                <p class="text-gray-500 mt-1">Cadastrar e organizar os quartos por ala.</p>
+            </div>
+        </a>
+
+        <a href="{% url 'gestao_hospitalar:leito_list' %}" class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow flex items-center" style="text-decoration: none;">
+            <div class="flex-shrink-0 w-16 h-16 flex items-center justify-center bg-red-100 rounded-full">
+                <i class="fas fa-bed fa-2x text-red-500"></i>
+            </div>
+            <div class="ml-4">
+                <h2 class="text-xl font-semibold text-gray-800">Leitos</h2>
+                <p class="text-gray-500 mt-1">Administrar os leitos disponíveis em cada quarto.</p>
+            </div>
+        </a>
+
+        <a href="{% url 'gestao_hospitalar:paciente_list' %}" class="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow flex items-center" style="text-decoration: none;">
+            <div class="flex-shrink-0 w-16 h-16 flex items-center justify-center bg-purple-100 rounded-full">
+                <i class="fas fa-user-injured fa-2x text-purple-500"></i>
+            </div>
+            <div class="ml-4">
+                <h2 class="text-xl font-semibold text-gray-800">Pacientes</h2>
+                <p class="text-gray-500 mt-1">Gerenciar pacientes, alocação e diagnósticos.</p>
+            </div>
+        </a>
+    {% endif %}
 
 </div>
 {% endblock %}

@@ -1,0 +1,40 @@
+{% extends 'base_dashboard.html' %}
+
+{% block page_title %}Gerenciar Tipos de Exame{% endblock %}
+
+{% block dashboard_content %}
+<div class="management-header">
+    <h2 class="text-2xl font-bold text-gray-700">Tipos de Exame Físico</h2>
+    <a href="{% url 'gestao_hospitalar:tipo_exame_create' %}" class="btn btn-primary"><i class="fas fa-plus mr-2"></i> Adicionar Tipo de Exame</a>
+</div>
+
+<div class="table-responsive">
+    <table class="management-table">
+        <thead>
+            <tr>
+                <th>Nome do Tipo de Exame</th>
+                <th class="text-center">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tipo_exame in tipos_exame %}
+            <tr>
+                <td>{{ tipo_exame.nome }}</td>
+                <td class="text-center">
+                    <a href="{% url 'gestao_hospitalar:tipo_exame_update' tipo_exame.pk %}" class="btn-action btn-edit">Editar</a>
+                    <a href="{% url 'gestao_hospitalar:tipo_exame_delete' tipo_exame.pk %}" class="btn-action btn-delete">Excluir</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="2" class="text-center text-gray-500 py-4">Nenhum tipo de exame cadastrado.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="mt-4">
+    <a href="{% url 'gestao_hospitalar:sae_parametrizacao' %}" class="btn btn-secondary">← Voltar para Parametrização</a>
+</div>
+{% endblock %}

@@ -7,6 +7,8 @@ urlpatterns = [
     path('', views.index, name='index'),
     path('sobre/', views.sobre, name='sobre'),
     path('noticia/<int:pk>/', views.noticia_detalhe_view, name='noticia_detalhe'),
+    path('noticias/', views.lista_noticias, name='lista_noticias'),
+    path('prompts/', views.prompt_library, name='prompt_library'),
     
     # URLs de Gerenciamento de Notícias
     path('gerenciar/noticias/', views.gerenciar_noticias, name='gerenciar_noticias'),

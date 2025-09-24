@@ -1,0 +1,28 @@
+{% extends 'base_dashboard.html' %}
+{% block page_title %}Gerenciar Resultados NOC{% endblock %}
+{% block dashboard_content %}
+<div class="management-header">
+    <h2 class="text-2xl font-bold text-gray-700">Resultados Esperados (NOC)</h2>
+    <a href="{% url 'gestao_hospitalar:noc_create' %}" class="btn btn-primary"><i class="fas fa-plus mr-2"></i> Adicionar NOC</a>
+</div>
+<div class="table-responsive">
+    <table class="management-table">
+        <thead><tr><th>Código</th><th>Título do Resultado</th><th class="text-center">Ações</th></tr></thead>
+        <tbody>
+            {% for noc in resultados_noc %}
+            <tr>
+                <td>{{ noc.codigo }}</td>
+                <td>{{ noc.titulo }}</td>
+                <td class="text-center">
+                    <a href="{% url 'gestao_hospitalar:noc_update' noc.pk %}" class="btn-action btn-edit">Editar</a>
+                    <a href="{% url 'gestao_hospitalar:noc_delete' noc.pk %}" class="btn-action btn-delete">Excluir</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" class="text-center text-gray-500 py-4">Nenhum resultado NOC cadastrado.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div class="mt-4"><a href="{% url 'gestao_hospitalar:sae_parametrizacao' %}" class="btn btn-secondary">← Voltar para Parametrização</a></div>
+{% endblock %}

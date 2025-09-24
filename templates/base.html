@@ -7,6 +7,7 @@
     <title>{% block title %}Lummia Consultoria{% endblock %}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'img/favicon.ico' %}">
 </head>
 <body>
 
@@ -18,7 +19,7 @@
             <nav class="main-nav">
                 <a href="{% url 'index' %}">Início</a>
                 <a href="{% url 'sobre' %}">Sobre Nós</a>
-                <a href="{% url 'index' %}#news">Notícias</a>
+                <a href="{% url 'lista_noticias' %}">Notícias</a>
                 
                 {% if user.is_authenticated %}
                     <!-- Opções para usuários LOGADOS -->
@@ -43,6 +44,6 @@
             <p>&copy; {% now "Y" %} Lummia Consultoria. Todos os direitos reservados.</p>
         </div>
     </footer>
-
+ {% block scripts %}{% endblock %}
 </body>
 </html>

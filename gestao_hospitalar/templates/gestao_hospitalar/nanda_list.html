@@ -1,0 +1,42 @@
+{% extends 'base_dashboard.html' %}
+
+{% block page_title %}Gerenciar Diagnósticos NANDA-I{% endblock %}
+
+{% block dashboard_content %}
+<div class="management-header">
+    <h2 class="text-2xl font-bold text-gray-700">Diagnósticos de Enfermagem (NANDA-I)</h2>
+    <a href="{% url 'gestao_hospitalar:nanda_create' %}" class="btn btn-primary"><i class="fas fa-plus mr-2"></i> Adicionar Diagnóstico</a>
+</div>
+
+<div class="table-responsive">
+    <table class="management-table">
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Título do Diagnóstico</th>
+                <th class="text-center">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for diag in diagnosticos %}
+            <tr>
+                <td>{{ diag.codigo }}</td>
+                <td>{{ diag.titulo }}</td>
+                <td class="text-center">
+                    <a href="{% url 'gestao_hospitalar:nanda_update' diag.pk %}" class="btn-action btn-edit">Editar</a>
+                    <a href="{% url 'gestao_hospitalar:nanda_delete' diag.pk %}" class="btn-action btn-delete">Excluir</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3" class="text-center text-gray-500 py-4">Nenhum diagnóstico NANDA cadastrado.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="mt-4">
+    <a href="{% url 'gestao_hospitalar:sae_parametrizacao' %}" class="btn btn-secondary">← Voltar para Parametrização</a>
+</div>
+{% endblock %}

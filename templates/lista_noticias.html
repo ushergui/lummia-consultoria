@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Notícias - Lummia Consultoria{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1>Notícias e Insights</h1>
+    </div>
+</div>
+
+<section class="news-section">
+    <div class="container">
+        <div class="news-grid">
+            {% for noticia in noticias %}
+            <article class="news-card">
+                {% if noticia.imagem %}
+                <img src="{{ noticia.imagem.url }}" alt="Imagem da notícia: {{ noticia.titulo }}">
+                {% else %}
+                <img src="https://placehold.co/600x400/0A3D62/FFFFFF?text=Lummia" alt="Imagem da notícia: {{ noticia.titulo }}">
+                {% endif %}
+                <div class="card-content">
+                    <h3>{{ noticia.titulo }}</h3>
+                    <p>{{ noticia.conteudo|truncatewords:20 }}</p>
+                    <a href="{% url 'noticia_detalhe' noticia.pk %}" class="leia-mais-link">Leia mais &rarr;</a>
+                </div>
+            </article>
+            {% empty %}
+            <p class="text-center" style="grid-column: 1 / -1;">Nenhuma notícia publicada recentemente.</p>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

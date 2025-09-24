@@ -42,27 +42,35 @@
                     </a>
                 {% endif %}
 
-                {% if user.empresa and user.empresa.ferramentas_contratadas.all %}
-                    <div class="menu-separator">
-                        <span>Ferramentas</span>
-                    </div>
+               {% if user.empresa and user.empresa.ferramentas_contratadas.all or user.tipo_perfil == 'ADMINISTRADOR' %}
+              <div class="menu-separator">
+                  <span>Ferramentas</span>
+              </div>
 
-                    {% for ferramenta in user.empresa.ferramentas_contratadas.all %}
-                        {% if ferramenta.slug == 'gestao-hospitalar' %}
-                            <a href="{% url 'gestao_hospitalar:dashboard' %}" class="{% if 'gestao_hospitalar' in request.resolver_match.app_name %}active{% endif %}">
-                                <i class="fas fa-procedures"></i> Gestão Hospitalar
-                            </a>
-                        {% endif %}
-                    {% endfor %}
+              {% if user.tipo_perfil == 'ADMINISTRADOR' %}
+                  <a href="{% url 'gestao_hospitalar:dashboard' %}" class="{% if 'gestao_hospitalar' in request.resolver_match.app_name %}active{% endif %}">
+                      <i class="fas fa-procedures"></i> Gestão Hospitalar
+                  </a>
+              {% else %}
+                  {% for ferramenta in user.empresa.ferramentas_contratadas.all %}
+                      {% if ferramenta.slug == 'gestao-hospitalar' %}
+                          <a href="{% url 'gestao_hospitalar:dashboard' %}" class="{% if 'gestao_hospitalar' in request.resolver_match.app_name %}active{% endif %}">
+                              <i class="fas fa-procedures"></i> Gestão Hospitalar
+                          </a>
+                      {% endif %}
+                  {% endfor %}
+              {% endif %}
 
-                    {% for ferramenta in user.empresa.ferramentas_contratadas.all %}
-                        {% if ferramenta.slug != 'gestao-hospitalar' %}
-                            <a href="{% url 'acessar_ferramenta' ferramenta_slug=ferramenta.slug %}" class="{% if request.resolver_match.kwargs.ferramenta_slug == ferramenta.slug %}active{% endif %}">
-                                <i class="fas fa-calculator"></i> {{ ferramenta.nome }}
-                            </a>
-                        {% endif %}
-                    {% endfor %}
-                {% endif %}
+              {% if user.empresa %}
+                  {% for ferramenta in user.empresa.ferramentas_contratadas.all %}
+                      {% if ferramenta.slug != 'gestao-hospitalar' %}
+                          <a href="{% url 'acessar_ferramenta' ferramenta_slug=ferramenta.slug %}" class="{% if request.resolver_match.kwargs.ferramenta_slug == ferramenta.slug %}active{% endif %}">
+                              <i class="fas fa-calculator"></i> {{ ferramenta.nome }}
+                          </a>
+                      {% endif %}
+                  {% endfor %}
+              {% endif %}
+          {% endif %}
             </nav>
             <div class="sidebar-footer">
                 <form action="{% url 'logout' %}" method="post" style="width: 100%;">

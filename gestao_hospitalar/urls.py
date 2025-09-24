@@ -5,7 +5,8 @@ app_name = 'gestao_hospitalar'
 
 urlpatterns = [
     path('', views.HospitalDashboardView.as_view(), name='dashboard'),
-    
+    path('sae/parametrizacao/', views.SAEParametrizacaoView.as_view(), name='sae_parametrizacao'),
+
     # URLs para Ala
     path('alas/', views.AlaListView.as_view(), name='ala_list'),
     path('alas/nova/', views.AlaCreateView.as_view(), name='ala_create'),
@@ -36,12 +37,50 @@ urlpatterns = [
     path('sae/', views.SAEDashboardView.as_view(), name='sae_dashboard'),
     path('paciente/<int:paciente_pk>/sae/avaliar/', views.SAEWizardView.as_view(), name='sae_wizard'),
 
-    # URLs para API interna (usadas pelo JavaScript para carregar dados dinamicamente)
-    path('api/areas-especificas/<int:area_corporal_id>/', views.get_areas_especificas_json, name='api_get_areas_especificas'),
-    path('api/achados-clinicos/<int:area_especifica_id>/<str:tipo_exame>/', views.get_achados_clinicos_json, name='api_get_achados_clinicos'),
-    path('api/sugerir-nanda/', views.sugerir_nanda_json, name='api_sugerir_nanda'),
-    path('api/plano-cuidados/<int:nanda_id>/', views.get_plano_cuidados_json, name='api_get_plano_cuidados'),
-    path('sae/avaliacao/<int:pk>/', views.SAEAvaliacaoDetailView.as_view(), name='sae_avaliacao_detail'),
+# AreaCorporal
+    path('areas-corporais/', views.AreaCorporalListView.as_view(), name='area_corporal_list'),
+    path('areas-corporais/nova/', views.AreaCorporalCreateView.as_view(), name='area_corporal_create'),
+    path('areas-corporais/<int:pk>/editar/', views.AreaCorporalUpdateView.as_view(), name='area_corporal_update'),
+    path('areas-corporais/<int:pk>/excluir/', views.AreaCorporalDeleteView.as_view(), name='area_corporal_delete'),
+    # TipoExame
+    path('tipos-exame/', views.TipoExameListView.as_view(), name='tipo_exame_list'),
+    path('tipos-exame/novo/', views.TipoExameCreateView.as_view(), name='tipo_exame_create'),
+    path('tipos-exame/<int:pk>/editar/', views.TipoExameUpdateView.as_view(), name='tipo_exame_update'),
+    path('tipos-exame/<int:pk>/excluir/', views.TipoExameDeleteView.as_view(), name='tipo_exame_delete'),
+    # AreaEspecifica
+    path('areas-especificas/', views.AreaEspecificaListView.as_view(), name='area_especifica_list'),
+    path('areas-especificas/nova/', views.AreaEspecificaCreateView.as_view(), name='area_especifica_create'),
+    path('areas-especificas/<int:pk>/editar/', views.AreaEspecificaUpdateView.as_view(), name='area_especifica_update'),
+    path('areas-especificas/<int:pk>/excluir/', views.AreaEspecificaDeleteView.as_view(), name='area_especifica_delete'),
+    # AchadoClinico
+    path('achados-clinicos/', views.AchadoClinicoListView.as_view(), name='achado_clinico_list'),
+    path('achados-clinicos/novo/', views.AchadoClinicoCreateView.as_view(), name='achado_clinico_create'),
+    path('achados-clinicos/<int:pk>/editar/', views.AchadoClinicoUpdateView.as_view(), name='achado_clinico_update'),
+    path('achados-clinicos/<int:pk>/excluir/', views.AchadoClinicoDeleteView.as_view(), name='achado_clinico_delete'),
+    # NANDA
+    path('nanda/', views.DiagnosticoNANDAListView.as_view(), name='nanda_list'),
+    path('nanda/novo/', views.DiagnosticoNANDACreateView.as_view(), name='nanda_create'),
+    path('nanda/<int:pk>/editar/', views.DiagnosticoNANDAUpdateView.as_view(), name='nanda_update'),
+    path('nanda/<int:pk>/excluir/', views.DiagnosticoNANDADeleteView.as_view(), name='nanda_delete'),
+    # NOC
+    path('noc/', views.ResultadoNOCListView.as_view(), name='noc_list'),
+    path('noc/novo/', views.ResultadoNOCCreateView.as_view(), name='noc_create'),
+    path('noc/<int:pk>/editar/', views.ResultadoNOCUpdateView.as_view(), name='noc_update'),
+    path('noc/<int:pk>/excluir/', views.ResultadoNOCDeleteView.as_view(), name='noc_delete'),
+    # NIC
+    path('nic/', views.IntervencaoNICListView.as_view(), name='nic_list'),
+    path('nic/novo/', views.IntervencaoNICCreateView.as_view(), name='nic_create'),
+    path('nic/<int:pk>/editar/', views.IntervencaoNICUpdateView.as_view(), name='nic_update'),
+    path('nic/<int:pk>/excluir/', views.IntervencaoNICDeleteView.as_view(), name='nic_delete'),
+    
+    # ==========================================================
+    # URLs para o Módulo SAE - Fluxo de Avaliação
+    # ==========================================================
+    path('sae/', views.SAEDashboardView.as_view(), name='sae_dashboard'),
+    path('paciente/<int:paciente_pk>/sae/avaliar/', views.SAEWizardView.as_view(), name='sae_wizard'),
     path('sae/paciente/<int:paciente_pk>/historico/', views.SAEHistoricoView.as_view(), name='sae_historico_paciente'),
-    path('sae/plano/<int:plano_id>/toggle/', views.toggle_plano_atividade, name='api_plano_toggle'),
+    path('sae/avaliacao/<int:pk>/', views.SAEAvaliacaoDetailView.as_view(), name='sae_avaliacao_detail'),
+    
+
+
 ]

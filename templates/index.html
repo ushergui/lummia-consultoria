@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}LumIA Consultoria - IA para Gestão em Saúde{% endblock %}
+{% block title %}Lummia Consultoria - IA para Gestão em Saúde{% endblock %}
 
 {% block content %}
 <section class="hero">
@@ -11,31 +11,81 @@
     </div>
 </section>
 
-<!-- SEÇÃO DE NOTÍCIAS AGORA É DINÂMICA -->
-<section id="news" class="news-section">
+<section class="services-section">
     <div class="container">
-        <h2>Últimas Notícias e Insights</h2>
-        <div class="news-grid">
-            {% for noticia in noticias %}
-            <article class="news-card">
-                {% if noticia.imagem %}
-                <img src="{{ noticia.imagem.url }}" alt="Imagem da notícia: {{ noticia.titulo }}">
-                {% else %}
-                <!-- Imagem placeholder caso não haja imagem -->
-                <img src="https://placehold.co/600x400/0A3D62/FFFFFF?text=Lummia" alt="Imagem da notícia: {{ noticia.titulo }}">
-                {% endif %}
-                <div class="card-content">
-                    <h3>{{ noticia.titulo }}</h3>
-                    <!-- Mostra apenas um trecho do conteúdo (20 primeiras palavras) -->
-                    <p>{{ noticia.conteudo|truncatewords:20 }}</p>
-                    <!-- Futuramente, podemos criar uma página de detalhe da notícia -->
-                    <a href="{% url 'noticia_detalhe' noticia.pk %}" class="leia-mais-link">Leia mais &rarr;</a>
-                </div>
-            </article>
-            {% empty %}
-            <p class="text-center" style="grid-column: 1 / -1;">Nenhuma notícia publicada recentemente.</p>
-            {% endfor %}
+        <h2>Nossos Serviços</h2>
+        <p class="section-subtitle">
+            Na LummIA, sabemos que cada instituição de saúde é única. Por isso, desenvolvemos soluções sob medida para líderes, gestores e equipes, sempre com foco em resultados reais e impacto positivo.
+        </p>
+        
+        <div class="services-grid">
+            <div class="service-card">
+                <i class="fas fa-clipboard-list"></i>
+                <h3>Aplicativo de Processo de Enfermagem</h3>
+                <p>Soluções inteligentes para otimizar registros e garantir maior segurança assistencial.</p>
+            </div>
+            <div class="service-card">
+                <i class="fas fa-hospital-user"></i>
+                <h3>Gestão hospitalar com IA</h3>
+                <p>Recursos estratégicos para apoiar a tomada de decisão e melhorar a eficiência operacional.</p>
+            </div>
+            <div class="service-card">
+                <i class="fas fa-calendar-alt"></i>
+                <h3>Aplicativo de direcionamento de escalas</h3>
+                <p>Aplicativo exclusivo para organização e otimização de escalas, garantindo agilidade e melhor alocação de profissionais da saúde.</p>
+            </div>
+            <div class="service-card">
+                <i class="fas fa-users"></i>
+                <h3>Mentorias individuais e em grupo</h3>
+                <p>Acompanhamento personalizado para líderes e equipes, com foco em inovação e gestão estratégica.</p>
+            </div>
+            <div class="service-card">
+                <i class="fas fa-brain"></i>
+                <h3>Cursos sobre inteligência artificial na saúde</h3>
+                <p>Capacitação para profissionais aplicarem IA de forma prática e segura em suas rotinas.</p>
+            </div>
+            <a href="{% url 'prompt_library' %}" class="card-link">
+            <div class="service-card">
+                <i class="fas fa-book-open"></i>
+                <h3>Biblioteca de prompts para a saúde</h3>
+                <p>Acervo exclusivo e em constante evolução, oferecendo comandos estruturados para potencializar o uso da IA em processos clínicos e administrativos.</p>
+            </div>
+        </a>
         </div>
     </div>
 </section>
+
+<section class="contact-section">
+    <div class="container">
+        <div class="contact-container">
+
+            <div class="contact-card">
+                <img src="{% static 'img/qrcode.png' %}" alt="QR Code para contato no WhatsApp">
+                <div class="card-title-with-icon">
+                    <img src="{% static 'img/Whatsapp.png' %}" alt="Ícone WhatsApp" class="contact-icon">
+                    <h3>Fale pelo WhatsApp</h3>
+                </div>
+                <p>Aponte a câmera do seu celular para iniciar uma conversa com nossa equipe.</p>
+                <a href="https://wa.me/SEUNUMERO" target="_blank" class="btn-contact-link">Abrir no App</a>
+            </div>
+
+            <div class="contact-text">
+                <h2>Conecte-se Conosco</h2>
+                <p>Estamos disponíveis em diversos canais para tirar suas dúvidas e apresentar nossas soluções. Escolha a sua plataforma preferida e vamos conversar!</p>
+            </div>
+
+            <div class="contact-card">
+                <img src="{% static 'img/Instagram.png' %}" alt="QR Code do Instagram Lummia Consultoria">
+                <div class="card-title-with-icon">
+                    <img src="{% static 'img/Instagram-logo.png' %}" alt="Ícone Instagram" class="contact-icon">
+                    <h3>Siga no Instagram</h3>
+                </div>
+                <p>Acompanhe nossos insights, notícias e bastidores seguindo nosso perfil.</p>
+                 <a href="https://instagram.com/lummia.consultoria" target="_blank" class="btn-contact-link">Abrir no App</a>
+            </div>
+
+        </div>
+    </div>
+</section>
+
 {% endblock %}

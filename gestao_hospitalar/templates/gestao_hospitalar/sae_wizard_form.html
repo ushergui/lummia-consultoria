@@ -243,69 +243,87 @@
   // A base já carrega o Alpine. Não inclua outro <script> do Alpine nesta página.
   function saeWizard(csrfToken, pacienteId) {
     return {
-      // Estado
+      // --- ESTADO DO WIZARD ---
       currentStep: 1,
-      stepTitle: '1. Escolha uma área no boneco',
+      stepTitle: '1. Clique em uma área do boneco para iniciar',
+      
+      // --- DADOS SELECIONADOS PELO USUÁRIO ---
       selectedAreaCorporal: { id: null, nome: '' },
+      selectedTipoExame: null,
+      selectedAreaEspecifica: { id: null, nome: '' },
+      selectedAchadosIds: [],
+      selectedNANDA: null,
+
+      // --- DADOS CARREGADOS DA API ---
+      areasEspecificas: [],
+      achadosCache: {}, // Cache para evitar buscas repetidas. Ex: {'1_INSPECAO': [achados...]}
+      suggestedNANDAs: [],
+      carePlan: [],
+      
+      // --- DADOS DE PROGRESSO DO PLANO ---
+      carePlanProgress: {},
+
+      // --- ESTADOS DE CARREGAMENTO (LOADING) ---
+      loadingAchados: false,
+      loadingNanda: false,
+      loadingPlan: false,
+      
+      // --- DADOS FIXOS ---
       tiposExame: [
         { id: 'INSPECAO', nome: 'Inspeção', icon: 'fa-eye' },
         { id: 'PALPACAO', nome: 'Palpação', icon: 'fa-hand-paper' },
         { id: 'AUSCULTA', nome: 'Ausculta', icon: 'fa-stethoscope' },
         { id: 'PERCUSSAO', nome: 'Percussão', icon: 'fa-hand-pointer' }
       ],
-      selectedTipoExame: null,
-      areasEspecificas: [],
-      selectedAreaEspecifica: { id: null, nome: '' },
-      achadosCache: {},            // key: `${areaId}_${tipo}` -> [achados]
-      selectedAchadosIds: [],
-      suggestedNANDAs: [],
-      selectedNANDA: null,
-      carePlan: [],
-      carePlanProgress: {},
-      loadingAchados: false,
-      loadingNanda: false,
-      loadingPlan: false,
 
-      // Helpers para texto (evita undefined e [object Object])
-      mapTipoExame(id){ const t = this.tiposExame.find(x => x.id === id); return t ? t.nome : id; },
-      safeJoin(a,b){ return [a,b].filter(Boolean).join(' - '); },
-      activityText(a){ return (typeof a === 'string') ? a : (a && a.descricao ? a.descricao : ''); },
+      // --- FUNÇÕES HELPER ---
+      mapTipoExame(id) { const t = this.tiposExame.find(x => x.id === id); return t ? t.nome : id; },
+      safeJoin(a, b) { return [a, b].filter(Boolean).join(' - '); },
+      activityText(a) { return (typeof a === 'string') ? a : (a && a.descricao ? a.descricao : ''); },
 
-      init(){
+      init() {
         this.$watch('currentStep', s => {
           const titles = {
-            1: '1. Escolha uma área no boneco',
+            1: '1. Clique em uma área do boneco para iniciar',
             2: '2. Selecione o tipo de exame',
             3: '3. Marque os achados clínicos',
             4: '4. Selecione o diagnóstico NANDA sugerido',
-            5: '5. Monte o Plano de Cuidados',
+            5: '5. Monte e execute o Plano de Cuidados',
           };
           this.stepTitle = titles[s] || '';
         });
       },
 
-      // Fluxo
-      async selectBodyPart(id, nome){
+      // --- FLUXO PRINCIPAL ---
+      async selectBodyPart(id, nome) {
         this.selectedAreaCorporal = { id, nome };
+        // Limpa as seleções subsequentes
         this.selectedTipoExame = null;
         this.selectedAreaEspecifica = { id: null, nome: '' };
         this.selectedAchadosIds = [];
+        
         const response = await fetch(`/hospital/api/areas-especificas/${id}/`);
         this.areasEspecificas = await response.json();
         this.currentStep = 2;
       },
-
-      selectTipoExame(tipo){
+      selectTipoExame(tipo) {
         this.selectedTipoExame = tipo;
-        this.selectedAreaEspecifica = { id: null, nome: '' };
-        this.selectedAchadosIds = [];
+        this.selectedAreaEspecifica = { id: null, nome: '' }; // Reseta a área específica
+        this.selectedAchadosIds = []; // Reseta os achados ao mudar o tipo de exame
         this.currentStep = 3;
       },
 
-      async selectAreaEspecifica(id, nome){
-        if (!this.selectedTipoExame) { alert('Selecione um tipo de exame.'); return; }
+      async selectAreaEspecifica(id, nome) {
+        if (!this.selectedTipoExame) {
+          alert('Por favor, primeiro selecione um tipo de exame na coluna à esquerda.');
+          // Desfaz a abertura do <details> se o tipo de exame não foi selecionado
+          event.target.closest('details').open = false;
+          return;
+        }
         this.selectedAreaEspecifica = { id, nome };
         const key = `${id}_${this.selectedTipoExame}`;
+
+        // Usa o cache se os dados já foram buscados
         if (!this.achadosCache[key]) {
           this.loadingAchados = true;
           const response = await fetch(`/hospital/api/achados-clinicos/${id}/${this.selectedTipoExame}/`);
@@ -314,15 +332,16 @@
         }
       },
 
-      getCachedAchados(areaId){
+      getCachedAchados(areaId) {
         const key = `${areaId}_${this.selectedTipoExame}`;
         return this.achadosCache[key] || [];
       },
 
-      async getNANDAsuggestions(){
+      async getNANDAsuggestions() {
         this.loadingNanda = true;
         const formData = new FormData();
         this.selectedAchadosIds.forEach(id => formData.append('achados_ids[]', id));
+        
         const response = await fetch(`/hospital/api/sugerir-nanda/`, {
           method: 'POST',
           headers: { 'X-CSRFToken': csrfToken },
@@ -333,42 +352,53 @@
         this.currentStep = 4;
       },
 
-      async selectNANDA(nanda){
+      async selectNANDA(nanda) {
         this.selectedNANDA = nanda;
         this.loadingPlan = true;
+        
         const response = await fetch(`/hospital/api/plano-cuidados/${nanda.id}/`);
         this.carePlan = await response.json();
-        // Inicializa progresso
+        
+        // Inicializa o objeto de progresso para as novas intervenções
         this.carePlanProgress = {};
         this.carePlan.forEach(noc => {
           (noc.intervencoes_nic || []).forEach(nic => {
-            this.carePlanProgress[nic.id] = { total: (nic.atividades || []).length, checked: [] };
+            this.carePlanProgress[nic.id] = { 
+              total: (nic.atividades || []).length, 
+              checked: [] 
+            };
           });
         });
         this.loadingPlan = false;
         this.currentStep = 5;
       },
 
-      toggleActivity(nicId, idx){
-        const bucket = this.carePlanProgress[nicId];
-        if (!bucket) return;
-        const i = bucket.checked.indexOf(idx);
-        if (i >= 0) bucket.checked.splice(i, 1); else bucket.checked.push(idx);
+      toggleActivity(nicId, activityIndex) {
+          const progress = this.carePlanProgress[nicId];
+          if (!progress) return;
+
+          const indexInChecked = progress.checked.indexOf(activityIndex);
+          if (indexInChecked > -1) {
+              progress.checked.splice(indexInChecked, 1);
+          } else {
+              progress.checked.push(activityIndex);
+          }
       },
 
-      getNicProgress(nicId){
+      getNicProgress(nicId) {
         const p = this.carePlanProgress[nicId];
         if (!p || p.total === 0) return 0;
         return (p.checked.length / p.total) * 100;
       },
 
-      getNocProgress(nocId){
+      getNocProgress(nocId) {
         const noc = this.carePlan.find(n => n.id === nocId);
         if (!noc || (noc.intervencoes_nic || []).length === 0) return 0;
         let total = 0;
         (noc.intervencoes_nic || []).forEach(nic => { total += this.getNicProgress(nic.id); });
         return total / noc.intervencoes_nic.length;
       },
+      
 
       async saveFullAssessment(){
         const finalData = {

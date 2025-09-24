@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Biblioteca de Prompts - LummIA Consultoria{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1>Biblioteca de Prompts</h1>
+        <p style="color: #fff; opacity: 0.9; max-width: 700px; margin: 1rem auto 0;">Selecione uma categoria para visualizar prompts estratégicos para a gestão em saúde.</p>
+    </div>
+</div>
+
+<div class="container" style="padding-top: 50px; padding-bottom: 50px;">
+
+    <section class="prompt-categories">
+        <div class="category-card active" data-target="#enfermagem-prompts">
+            <i class="fas fa-user-nurse"></i>
+            <span>Enfermagem</span>
+        </div>
+        <div class="category-card" data-target="#fisioterapia-prompts">
+            <i class="fas fa-running"></i>
+            <span>Fisioterapia</span>
+        </div>
+        <div class="category-card" data-target="#medicina-prompts">
+            <i class="fas fa-stethoscope"></i>
+            <span>Medicina</span>
+        </div>
+    </section>
+
+    <section class="prompt-display">
+
+        <div id="enfermagem-prompts" class="prompt-group active">
+            
+            <div class="prompt-card">
+                <h4>PROMPT 001 – Reunião</h4>
+                <div class="prompt-content">
+                    <pre>Estruture reunião executiva estratégica de 90 minutos focada na melhoria de indicador crítico institucional (segurança do paciente, mortalidade hospitalar, infecção associada aos cuidados de saúde, satisfação do usuário, tempo de permanência, glosa operacional ou produtividade assistencial). A agenda deve iniciar com análise situacional baseada em dados, apresentando tendências históricas, benchmarking setorial e identificação de gaps de performance. Desenvolva metodologia estruturada incluindo apresentação do problema (15 minutos), análise de causa raiz com ferramentas de qualidade (20 minutos), discussão multiprofissional de soluções baseadas em evidências (30 minutos) e definição de plano de ação com cronograma específico (20 minutos). Reserve tempo para estabelecimento de métricas de monitoramento, responsáveis por cada ação e cronograma de follow-up. A condução deve utilizar técnicas de facilitação que promovam engajamento da liderança, tomada de decisão colaborativa e compromisso com resultados mensuráveis. Finalize com definição de indicadores de processo e impacto, sistema de governança para acompanhamento e agendamento de reunião subsequente para avaliação de progresso.</pre>
+                </div>
+                <button class="btn btn-copy">Copiar Prompt</button>
+            </div>
+
+            <div class="prompt-card">
+                <h4>PROMPT 002 - Análise de custeio por atividade (ABC)</h4>
+                <div class="prompt-content">
+                    <pre>Implemente sistema abrangente de custeio baseado em atividades (ABC) específico para serviços de enfermagem, iniciando com mapeamento detalhado de processos assistenciais por unidade de internação. Identifique e classifique atividades primárias (cuidado direto ao paciente) e secundárias (documentação, coordenação, educação), estabelecendo hierarquia de valor agregado para cada processo. Desenvolva framework de direcionadores de custos específicos para enfermagem, incluindo tempo de enfermeiro por atividade, materiais consumidos, equipamentos utilizados e overhead departamental. Configure sistema de cálculo de custos por atividade com metodologia de rastreamento de recursos e alocação proporcional de custos indiretos. Estabeleça análise comparativa de custos entre unidades assistenciais, identificação sistemática de gargalos operacionais e oportunidades de otimização de recursos. Implemente sistema de indicadores de produtividade e eficiência com dashboard automatizado, relatórios gerenciais em tempo real e precificação baseada em evidências para procedimentos e cuidados de enfermagem.</pre>
+                </div>
+                <button class="btn btn-copy">Copiar Prompt</button>
+            </div>
+
+            <div class="prompt-card">
+                <h4>PROMPT 003 - Protocolo de prevenção de IRAS</h4>
+                <div class="prompt-content">
+                    <pre>Desenvolva protocolo evidence-based abrangente para prevenção de infecções relacionadas à assistência à saúde (IRAS) com foco nas práticas de enfermagem. Estabeleça bundles específicos e validados para prevenção de pneumonia associada à ventilação mecânica (PAV), infecção do trato urinário associada ao cateter (ITU-AC) e infecção de corrente sanguínea associada ao cateter (ICS-AC). Implemente técnicas assépticas padronizadas com base em diretrizes internacionais, protocolo rigoroso de higiene das mãos seguindo os 5 momentos da OMS e sistema estruturado de precauções de isolamento por mecanismo de transmissão. Configure programa de vigilância epidemiológica ativa com coleta sistemática de culturas de vigilância e monitoramento microbiológico contínuo.Estabeleça protocolos específicos de limpeza e desinfecção de superfícies e equipamentos, diretrizes para uso racional de antimicrobianos e sistema robusto de indicadores de processo e impacto. Complete com programa de auditoria de conformidade com feedback em tempo real, educação permanente baseada em competências, análise sistemática de resistência bacteriana e relatórios epidemiológicos regulares para gestão de risco infeccioso.</pre>
+                </div>
+                <button class="btn btn-copy">Copiar Prompt</button>
+            </div>
+
+        </div>
+
+        <div id="fisioterapia-prompts" class="prompt-group">
+            <div class="prompt-card">
+                <h4>PROMPT 001 - Dimensionamento específico para fisioterapia</h4>
+                <div class="prompt-content">
+                    <pre>Desenvolva modelo matemático abrangente para dimensionamento de fisioterapeutas em hospital terciário de 300 leitos, fundamentado na Resolução COFFITO nº 465/2016. O modelo deve incorporar sistema de classificação de pacientes por complexidade fisioterapêutica utilizando ferramentas validadas como ICU Score, Índice de Barthel modificado e Escala APACHE II para estratificação de demanda assistencial. Estabeleça parâmetros operacionais incluindo carga horária padrão de 30 horas semanais e proporções específicas por unidade: 1:10 fisioterapeuta/leito em UTI, 1:15 em Semi-intensiva e 1:20 em Enfermaria. Defina tempos de atendimento diferenciados por complexidade (alta complexidade: 60 minutos, média: 45 minutos, baixa: 30 minutos) e assegure cobertura adequada para fins de semana e feriados. Integre ao modelo análise de fatores operacionais como taxa de absenteísmo (6%), sistema de produtividade baseado em RVU (Relative Value Units) e avaliação de custo-efetividade por especialidade fisioterapêutica. Complete com projeção de demanda baseada no case-mix hospitalar e simulação de cenários sazonais para otimização do dimensionamento.
+                </pre>
+                </div>
+                <button class="btn btn-copy">Copiar Prompt</button>
+            </div>
+            <div class="prompt-card">
+                <h4>PROMPT 002 - Análise de custo-efetividade em reabilitação</h4>
+                <div class="prompt-content">
+                    <pre>Estabeleça framework robusto de análise econômica em saúde específico para intervenções fisioterapêuticas, incorporando metodologias de custo-efetividade, custo-utilidade e custo-benefício. Desenvolva sistema de mensuração utilizando QALYs (Quality-Adjusted Life Years) adaptados para reabilitação e instrumentos de qualidade de vida validados internacionalmente (SF-36, EQ-5D, FIM). Implemente modelagem de Markov para análise de progressão funcional com horizonte temporal apropriado, aplicando técnicas de desconto de custos e benefícios conforme diretrizes econômicas. Configure análise de sensibilidade determinística e probabilística, estabelecendo threshold de disposição a pagar compatível com realidade local. Desenvolva modelagem de impacto orçamentário comparativa com alternativas terapêuticas disponíveis, gerando evidência científica robusta para submissão a processos de HTA (Health Technology Assessment). O framework deve permitir tomada de decisão baseada em evidências para implementação de tecnologias fisioterapêuticas.</pre>
+                </div>
+                <button class="btn btn-copy">Copiar Prompt</button>
+            </div>
+             <div class="prompt-card">
+                <h4>PROMPT 003 - Protocolo de mobilização precoce em UTI</h4>
+                <div class="prompt-content">
+                    <pre>Desenvolva protocolo evidence-based abrangente de mobilização precoce para pacientes críticos, estabelecendo critérios rigorosos de elegibilidade e contraindicações fundamentados em literatura científica atual. Implemente sistema de avaliação funcional utilizando IMS (ICU Mobility Scale) com progressão estruturada em 10 níveis funcionais graduais. Configure critérios de segurança multissistêmicos incluindo parâmetros cardiovasculares, respiratórios e neurológicos, integrados a protocolos de sedação compatível e interrupção diária programada. Estabeleça coordenação multiprofissional estruturada entre fisioterapeuta, enfermeiro e médico intensivista, com definição clara de responsabilidades e fluxos assistenciais. Incorpore arsenal tecnológico específico incluindo cicloergômetro, estimulação elétrica funcional (FES) e sistemas de verticalização, com protocolos rigorosos de monitorização durante atividades e indicadores precisos de tolerância ao exercício. Defina métricas de outcome clinicamente relevantes (tempo de ventilação mecânica, permanência hospitalar, funcionalidade na alta) com análise de custo-efetividade, programa de treinamento multiprofissional e sistema de auditoria de conformidade protocolos.</pre>
+                </div>
+                <button class="btn btn-copy">Copiar Prompt</button>
+            </div>
+        </div>
+
+        <div id="medicina-prompts" class="prompt-group">
+            <div class="prompt-card">
+                <h4>PROMPT 001 - Sistema de governança médica</h4>
+                <div class="prompt-content">
+                    <pre>Desenvolva um sistema abrangente de governança clínica hospitalar que estabeleça estruturas organizacionais sólidas e processos de qualidade. O sistema deve incluir uma hierarquia de liderança médica bem definida, composta pelo Corpo Médico Executivo (CME), diretoria clínica e chefias departamentais. Implemente processo rigoroso de credenciamento médico baseado em competências específicas, com definição clara de privilégios clínicos e sistema de recredenciamento periódico obrigatório. O programa deve incorporar proctoring sistemático para novos procedimentos, peer review estruturado e análise detalhada de morbimortalidade. Estabeleça comitês clínicos especializados que desenvolvam protocolos baseados em evidências científicas e clinical pathways integrados. Configure sistema de auditoria médica interna com indicadores específicos de qualidade, gestão proativa de eventos adversos e metodologia de análise de causa raiz. Promova cultura institucional de segurança clínica que inclua política de disclosure transparente de erros médicos, protocolos de comunicação com famílias e treinamento em aspectos médico-legais. Complete a estrutura com cobertura adequada de seguro de responsabilidade civil e programa contínuo de educação em ética médica.</pre>
+                </div>
+                <button class="btn btn-copy">Copiar Prompt</button>
+            </div>
+            <div class="prompt-card">
+                <h4>PROMPT 002 - Comitês médicos especializados</h4>
+                <div class="prompt-content">
+                    <pre>Estabeleça rede integrada de comitês médicos especializados que assegurem excelência clínica e segurança do paciente. Constitua Comitê de Mortalidade focado na análise sistemática de óbitos evitáveis, Comissão de Controle de Infecção Hospitalar (CCIH) com componente médico robusto, e Comitê de Farmácia e Terapêutica para otimização terapêutica. Implemente comitês específicos incluindo Transfusão Sanguínea, Ética Médica, Transplantes, Multidisciplinar de Tumores e Cuidados Paliativos. Cada comitê deve utilizar metodologia padronizada de análise de casos, desenvolver indicadores específicos de desempenho e produzir relatórios executivos regulares. As recomendações devem ser fundamentadas em evidências científicas, com planos estruturados de implementação e monitoramento contínuo de efetividade. Garanta integração eficiente entre comitês, comunicação institucional transparente e sistema de benchmarking externo para melhoria contínua da qualidade assistencial.</pre>
+                </div>
+                <button class="btn btn-copy">Copiar Prompt</button>
+            </div>
+            <div class="prompt-card">
+                <h4>PROMPT 003 - Cardiologia intervencionista</h4>
+                <div class="prompt-content">
+                    <pre>Desenvolva serviço completo de cardiologia intervencionista com capacidade de hemodinâmica 24 horas e programa robusto de angioplastia primária. O serviço deve ofertar procedimentos avançados incluindo TAVI (implante valvar aórtico transcateter), MitraClip, oclusores para defeitos septais, ablação de arritmias complexas e dispositivos de estimulação cardíaca (marcapassos, ressincronizadores, CDI implantáveis). Estabeleça programa de suporte circulatório mecânico com balão intra-aórtico, dispositivos Impella e ECMO cardiogênico. Configure equipe multidisciplinar Heart Team integrada com retaguarda de cirurgia cardíaca, suporte de ecocardiografia transesofágica e tecnologias de imagem intravascular (IVUS, OCT) e avaliação funcional (FFR). Implemente sistema robusto de registro de procedimentos, complications registry e análise de outcomes cardiovasculares baseada em medicina de evidências. Complete a estrutura com programa de ensino em cardiologia intervencionista, protocolo de pesquisa clínica e plataforma de inovação tecnológica para avanço contínuo da especialidade.</pre>
+                </div>
+                <button class="btn btn-copy">Copiar Prompt</button>
+            </div>
+        </div>
+    </section>
+</div>
+
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const categoryCards = document.querySelectorAll('.category-card');
+    const promptGroups = document.querySelectorAll('.prompt-group');
+    const copyButtons = document.querySelectorAll('.btn-copy');
+
+    // Lógica para trocar de categoria (esta parte está correta e não muda)
+    categoryCards.forEach(card => {
+        card.addEventListener('click', function() {
+            categoryCards.forEach(c => c.classList.remove('active'));
+            promptGroups.forEach(g => g.classList.remove('active'));
+
+            this.classList.add('active');
+            const target = document.querySelector(this.dataset.target);
+            if (target) {
+                target.classList.add('active');
+            }
+        });
+    });
+
+    // Lógica para o botão de copiar (AQUI ESTÁ A CORREÇÃO)
+    copyButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // ----- INÍCIO DA MUDANÇA -----
+
+            // ANTES (a linha que causava o problema):
+            // const promptContent = this.previousElementSibling.querySelector('pre').innerText;
+
+            // DEPOIS (a nova linha, mais robusta):
+            const card = this.closest('.prompt-card');
+            const promptContent = card.querySelector('.prompt-content pre').innerText;
+            
+            // ----- FIM DA MUDANÇA -----
+
+            navigator.clipboard.writeText(promptContent).then(() => {
+                const originalText = this.innerText;
+                this.innerText = 'Copiado!';
+                this.classList.add('copied');
+                
+                setTimeout(() => {
+                    this.innerText = originalText;
+                    this.classList.remove('copied');
+                }, 2000);
+            }).catch(err => {
+                console.error('Erro ao copiar texto: ', err);
+                alert('Não foi possível copiar o prompt.');
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

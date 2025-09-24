@@ -5,11 +5,11 @@ from django.views.generic import TemplateView, ListView, CreateView, UpdateView,
 from .models import (
     Ala, AvaliacaoFugulin, Quarto, Leito, Paciente, AreaCorporal, 
     AreaEspecifica, AchadoClinico, DiagnosticoNANDA, ResultadoNOC, 
-    IntervencaoNIC, AtividadeNIC, AvaliacaoSAE, PlanoCuidado
+    IntervencaoNIC, AtividadeNIC, AvaliacaoSAE, PlanoCuidado, TipoExame,
 )
 from .forms import (
     AlaForm, QuartoForm, LeitoForm, PacienteForm, 
-    AvaliacaoFugulinForm, AvaliacaoSAEForm
+    AvaliacaoFugulinForm, AvaliacaoSAEForm, TipoExameForm, AreaEspecificaForm, AreaCorporalForm, AchadoClinicoForm, DiagnosticoNANDAForm, ResultadoNOCForm, IntervencaoNICForm, AtividadeNICFormSet
 )
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views import View
@@ -18,11 +18,284 @@ import json
 from django.db import transaction
 from django.views.decorators.csrf import csrf_exempt
 # Este Mixin agora serve apenas para verificar a permissão do usuário.
+
+class AdministradorRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
+    """ Garante que o usuário logado é o Administrador da plataforma. """
+    def test_func(self):
+        return self.request.user.tipo_perfil == 'ADMINISTRADOR'
+
 class AdminClienteRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
     def test_func(self):
         return self.request.user.tipo_perfil in ['ADMIN_CLIENTE', 'ADMINISTRADOR']
-        
+    
 
+class IntervencaoNICListView(AdminClienteRequiredMixin, ListView):
+    model = IntervencaoNIC
+    template_name = 'gestao_hospitalar/nic_list.html'
+    context_object_name = 'intervencoes_nic'
+    def get_queryset(self):
+        return IntervencaoNIC.objects.filter(empresa=self.request.user.empresa)
+
+class IntervencaoNICCreateView(AdminClienteRequiredMixin, CreateView):
+    model = IntervencaoNIC
+    form_class = IntervencaoNICForm
+    template_name = 'gestao_hospitalar/nic_form.html'
+    success_url = reverse_lazy('gestao_hospitalar:nic_list')
+    
+    def get_context_data(self, **kwargs):
+        data = super().get_context_data(**kwargs)
+        if self.request.POST:
+            data['atividades_formset'] = AtividadeNICFormSet(self.request.POST)
+        else:
+            data['atividades_formset'] = AtividadeNICFormSet()
+        data['titulo'] = "Adicionar Nova Intervenção (NIC)"
+        data['cancel_url'] = reverse_lazy('gestao_hospitalar:nic_list')
+        return data
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs(); kwargs['empresa'] = self.request.user.empresa; return kwargs
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        atividades_formset = context['atividades_formset']
+        with transaction.atomic():
+            form.instance.empresa = self.request.user.empresa
+            self.object = form.save()
+            if atividades_formset.is_valid():
+                atividades_formset.instance = self.object
+                atividades_formset.save()
+        return super().form_valid(form)
+
+class IntervencaoNICUpdateView(AdminClienteRequiredMixin, UpdateView):
+    model = IntervencaoNIC
+    form_class = IntervencaoNICForm
+    template_name = 'gestao_hospitalar/nic_form.html'
+    success_url = reverse_lazy('gestao_hospitalar:nic_list')
+
+    def get_queryset(self):
+        return IntervencaoNIC.objects.filter(empresa=self.request.user.empresa)
+    
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs(); kwargs['empresa'] = self.request.user.empresa; return kwargs
+
+    def get_context_data(self, **kwargs):
+        data = super().get_context_data(**kwargs)
+        if self.request.POST:
+            data['atividades_formset'] = AtividadeNICFormSet(self.request.POST, instance=self.object)
+        else:
+            data['atividades_formset'] = AtividadeNICFormSet(instance=self.object)
+        data['titulo'] = "Editar Intervenção (NIC)"
+        data['cancel_url'] = reverse_lazy('gestao_hospitalar:nic_list')
+        return data
+
+    def form_valid(self, form):
+        context = self.get_context_data()
+        atividades_formset = context['atividades_formset']
+        if atividades_formset.is_valid():
+            with transaction.atomic():
+                self.object = form.save()
+                atividades_formset.instance = self.object
+                atividades_formset.save()
+            return super().form_valid(form)
+        else:
+            return self.form_invalid(form)
+
+class IntervencaoNICDeleteView(AdminClienteRequiredMixin, DeleteView):
+    model = IntervencaoNIC
+    template_name = 'gestao_hospitalar/confirm_delete_template.html'
+    success_url = reverse_lazy('gestao_hospitalar:nic_list')
+    def get_queryset(self):
+        return IntervencaoNIC.objects.filter(empresa=self.request.user.empresa)
+    
+class ResultadoNOCListView(AdminClienteRequiredMixin, ListView):
+    model = ResultadoNOC
+    template_name = 'gestao_hospitalar/noc_list.html'
+    context_object_name = 'resultados_noc'
+    def get_queryset(self):
+        return ResultadoNOC.objects.filter(empresa=self.request.user.empresa)
+
+class ResultadoNOCCreateView(AdminClienteRequiredMixin, CreateView):
+    model = ResultadoNOC
+    form_class = ResultadoNOCForm
+    template_name = 'gestao_hospitalar/form_template.html'
+    success_url = reverse_lazy('gestao_hospitalar:noc_list')
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs(); kwargs['empresa'] = self.request.user.empresa; return kwargs
+    def form_valid(self, form):
+        form.instance.empresa = self.request.user.empresa
+        return super().form_valid(form)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo'] = "Adicionar Novo Resultado (NOC)"
+        context['cancel_url'] = reverse_lazy('gestao_hospitalar:noc_list')
+        return context
+
+class ResultadoNOCUpdateView(AdminClienteRequiredMixin, UpdateView):
+    model = ResultadoNOC
+    form_class = ResultadoNOCForm
+    template_name = 'gestao_hospitalar/form_template.html'
+    success_url = reverse_lazy('gestao_hospitalar:noc_list')
+    def get_queryset(self):
+        return ResultadoNOC.objects.filter(empresa=self.request.user.empresa)
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs(); kwargs['empresa'] = self.request.user.empresa; return kwargs
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo'] = "Editar Resultado (NOC)"
+        context['cancel_url'] = reverse_lazy('gestao_hospitalar:noc_list')
+        return context
+
+class ResultadoNOCDeleteView(AdminClienteRequiredMixin, DeleteView):
+    model = ResultadoNOC
+    template_name = 'gestao_hospitalar/confirm_delete_template.html'
+    success_url = reverse_lazy('gestao_hospitalar:noc_list')
+    def get_queryset(self):
+        return ResultadoNOC.objects.filter(empresa=self.request.user.empresa)
+
+class DiagnosticoNANDAListView(AdminClienteRequiredMixin, ListView):
+    model = DiagnosticoNANDA
+    template_name = 'gestao_hospitalar/nanda_list.html'
+    context_object_name = 'diagnosticos'
+    def get_queryset(self):
+        return DiagnosticoNANDA.objects.filter(empresa=self.request.user.empresa)
+
+class DiagnosticoNANDACreateView(AdminClienteRequiredMixin, CreateView):
+    model = DiagnosticoNANDA
+    form_class = DiagnosticoNANDAForm
+    template_name = 'gestao_hospitalar/form_template.html'
+    success_url = reverse_lazy('gestao_hospitalar:nanda_list')
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['empresa'] = self.request.user.empresa
+        return kwargs
+    def form_valid(self, form):
+        form.instance.empresa = self.request.user.empresa
+        return super().form_valid(form)
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo'] = "Adicionar Novo Diagnóstico (NANDA-I)"
+        context['cancel_url'] = reverse_lazy('gestao_hospitalar:nanda_list')
+        return context
+
+class DiagnosticoNANDAUpdateView(AdminClienteRequiredMixin, UpdateView):
+    model = DiagnosticoNANDA
+    form_class = DiagnosticoNANDAForm
+    template_name = 'gestao_hospitalar/form_template.html'
+    success_url = reverse_lazy('gestao_hospitalar:nanda_list')
+    def get_queryset(self):
+        return DiagnosticoNANDA.objects.filter(empresa=self.request.user.empresa)
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['empresa'] = self.request.user.empresa
+        return kwargs
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo'] = "Editar Diagnóstico (NANDA-I)"
+        context['cancel_url'] = reverse_lazy('gestao_hospitalar:nanda_list')
+        return context
+
+class DiagnosticoNANDADeleteView(AdminClienteRequiredMixin, DeleteView):
+    model = DiagnosticoNANDA
+    template_name = 'gestao_hospitalar/confirm_delete_template.html'
+    success_url = reverse_lazy('gestao_hospitalar:nanda_list')
+    def get_queryset(self):
+        return DiagnosticoNANDA.objects.filter(empresa=self.request.user.empresa)    
+
+class AchadoClinicoListView(AdminClienteRequiredMixin, ListView):
+    model = AchadoClinico
+    template_name = 'gestao_hospitalar/achado_clinico_list.html'
+    context_object_name = 'achados_clinicos'
+
+    def get_queryset(self):
+        return AchadoClinico.objects.filter(empresa=self.request.user.empresa).select_related('area_especifica', 'tipo_exame')
+
+class AchadoClinicoCreateView(AdminClienteRequiredMixin, CreateView):
+    model = AchadoClinico
+    form_class = AchadoClinicoForm
+    template_name = 'gestao_hospitalar/form_template.html'
+    success_url = reverse_lazy('gestao_hospitalar:achado_clinico_list')
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['empresa'] = self.request.user.empresa
+        return kwargs
+    
+    def form_valid(self, form):
+        form.instance.empresa = self.request.user.empresa
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo'] = "Adicionar Novo Achado Clínico"
+        context['cancel_url'] = reverse_lazy('gestao_hospitalar:achado_clinico_list')
+        return context
+
+class AchadoClinicoUpdateView(AdminClienteRequiredMixin, UpdateView):
+    model = AchadoClinico
+    form_class = AchadoClinicoForm
+    template_name = 'gestao_hospitalar/form_template.html'
+    success_url = reverse_lazy('gestao_hospitalar:achado_clinico_list')
+    
+    def get_queryset(self):
+        return AchadoClinico.objects.filter(empresa=self.request.user.empresa)
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['empresa'] = self.request.user.empresa
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo'] = "Editar Achado Clínico"
+        context['cancel_url'] = reverse_lazy('gestao_hospitalar:achado_clinico_list')
+        return context
+
+class AchadoClinicoDeleteView(AdminClienteRequiredMixin, DeleteView):
+    model = AchadoClinico
+    template_name = 'gestao_hospitalar/confirm_delete_template.html'
+    success_url = reverse_lazy('gestao_hospitalar:achado_clinico_list')
+    
+    def get_queryset(self):
+        return AchadoClinico.objects.filter(empresa=self.request.user.empresa)
+
+
+
+class AreaCorporalListView(AdministradorRequiredMixin, ListView):
+    model = AreaCorporal
+    template_name = 'gestao_hospitalar/area_corporal_list.html'
+    context_object_name = 'areas_corporais'
+
+class AreaCorporalCreateView(AdministradorRequiredMixin, CreateView):
+    model = AreaCorporal
+    form_class = AreaCorporalForm
+    template_name = 'gestao_hospitalar/form_template.html'
+    success_url = reverse_lazy('gestao_hospitalar:area_corporal_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo'] = "Adicionar Nova Área Corporal"
+        context['cancel_url'] = reverse_lazy('gestao_hospitalar:area_corporal_list')
+        return context
+
+class AreaCorporalUpdateView(AdministradorRequiredMixin, UpdateView):
+    model = AreaCorporal
+    form_class = AreaCorporalForm
+    template_name = 'gestao_hospitalar/form_template.html'
+    success_url = reverse_lazy('gestao_hospitalar:area_corporal_list')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo'] = "Editar Área Corporal"
+        context['cancel_url'] = reverse_lazy('gestao_hospitalar:area_corporal_list')
+        return context
+
+class AreaCorporalDeleteView(AdministradorRequiredMixin, DeleteView):
+    model = AreaCorporal
+    template_name = 'gestao_hospitalar/confirm_delete_template.html'
+    success_url = reverse_lazy('gestao_hospitalar:area_corporal_list')
+        
+class SAEParametrizacaoView(AdminClienteRequiredMixin, TemplateView):
+    template_name = 'gestao_hospitalar/sae_parametrizacao.html'
 
 
 class SAEDashboardView(AdminClienteRequiredMixin, ListView):
@@ -50,10 +323,17 @@ def get_areas_especificas_json(request, area_corporal_id):
 
 def get_achados_clinicos_json(request, area_especifica_id, tipo_exame):
     """ Retorna os achados clínicos para uma área e tipo de exame """
+    
+    # A busca com __iexact (case-insensitive exact) garante que 'INSPECAO' encontre 'Inspeção' ou 'inspeção', etc.
+    # Esta é a linha que torna o sistema robusto a diferenças de capitalização.
+    tipo_exame_obj = get_object_or_404(TipoExame, nome__iexact=tipo_exame, empresa=request.user.empresa)
+
     achados = AchadoClinico.objects.filter(
+        empresa=request.user.empresa,
         area_especifica_id=area_especifica_id,
-        tipo_exame=tipo_exame.upper()
+        tipo_exame=tipo_exame_obj # Agora filtra pelo objeto, não pelo texto
     ).values('id', 'descricao')
+    
     return JsonResponse(list(achados), safe=False)
 
 def sugerir_nanda_json(request):
@@ -384,9 +664,7 @@ class PacienteAltaView(AdminClienteRequiredMixin, View):
         return redirect('gestao_hospitalar:paciente_avaliacao_list')
     
 class SAEWizardView(AdminClienteRequiredMixin, View):
-    """
-    View principal que controla o fluxo de avaliação da SAE e salva o resultado final.
-    """
+    
     def get(self, request, paciente_pk):
         paciente = get_object_or_404(Paciente, pk=paciente_pk, empresa=request.user.empresa)
         if not paciente.leito:
@@ -401,31 +679,32 @@ class SAEWizardView(AdminClienteRequiredMixin, View):
 
     @transaction.atomic
     def post(self, request, paciente_pk):
-        """ Salva a avaliação completa da SAE """
         paciente = get_object_or_404(Paciente, pk=paciente_pk, empresa=request.user.empresa)
         data = json.loads(request.body)
 
-        # Cria a instância principal da Avaliação SAE
         avaliacao = AvaliacaoSAE.objects.create(
             paciente=paciente,
             avaliador=request.user,
             diagnostico_nanda_selecionado_id=data.get('selectedNANDA_id'),
             is_finalizada=True
         )
-        # Adiciona os achados clínicos selecionados
+        
         achados_ids = data.get('selectedAchadosIds', [])
-        avaliacao.achados_selecionados.set(achados_ids)
+        if achados_ids:
+            avaliacao.achados_selecionados.set(achados_ids)
 
-        # Cria o Plano de Cuidados com o progresso das intervenções NIC
         plano_de_cuidados_data = data.get('carePlanProgress', {})
         for nic_id, progresso in plano_de_cuidados_data.items():
             PlanoCuidado.objects.create(
                 avaliacao=avaliacao,
                 intervencao_nic_id=nic_id,
-                progresso_atividades=progresso # Salva o JSON com as atividades marcadas
+                progresso_atividades=progresso
             )
 
-        return JsonResponse({'status': 'success', 'message': 'Plano de cuidados salvo com sucesso!'})
+        # Retorna a URL para a página de detalhes da avaliação recém-criada
+        detail_url = reverse_lazy('gestao_hospitalar:sae_avaliacao_detail', kwargs={'pk': avaliacao.pk})
+        return JsonResponse({'status': 'success', 'redirect_url': str(detail_url)})
+
     
 class SAEHistoricoView(AdminClienteRequiredMixin, DetailView):
     model = Paciente
@@ -491,8 +770,6 @@ class SAEAvaliacaoDetailView(AdminClienteRequiredMixin, DetailView):
         context['plan_json'] = plan_json
         return context
 
-
-
 @csrf_exempt
 def toggle_plano_atividade(request, plano_id):
     if request.method == 'POST':
@@ -519,3 +796,102 @@ def toggle_plano_atividade(request, plano_id):
         
         return JsonResponse({'status': 'success'})
     return JsonResponse({'status': 'error', 'message': 'Método inválido.'}, status=400)
+
+
+
+# === Views para Tipo de Exame ===
+
+class TipoExameListView(AdminClienteRequiredMixin, ListView):
+    model = TipoExame
+    template_name = 'gestao_hospitalar/tipo_exame_list.html'
+    context_object_name = 'tipos_exame'
+
+    def get_queryset(self):
+        return TipoExame.objects.filter(empresa=self.request.user.empresa)
+
+class TipoExameCreateView(AdminClienteRequiredMixin, CreateView):
+    model = TipoExame
+    form_class = TipoExameForm
+    template_name = 'gestao_hospitalar/form_template.html'
+    success_url = reverse_lazy('gestao_hospitalar:tipo_exame_list')
+
+    def form_valid(self, form):
+        form.instance.empresa = self.request.user.empresa
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo'] = "Adicionar Novo Tipo de Exame"
+        context['cancel_url'] = reverse_lazy('gestao_hospitalar:tipo_exame_list')
+        return context
+
+class TipoExameUpdateView(AdminClienteRequiredMixin, UpdateView):
+    model = TipoExame
+    form_class = TipoExameForm
+    template_name = 'gestao_hospitalar/form_template.html'
+    success_url = reverse_lazy('gestao_hospitalar:tipo_exame_list')
+
+    def get_queryset(self):
+        return TipoExame.objects.filter(empresa=self.request.user.empresa)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo'] = "Editar Tipo de Exame"
+        context['cancel_url'] = reverse_lazy('gestao_hospitalar:tipo_exame_list')
+        return context
+
+class TipoExameDeleteView(AdminClienteRequiredMixin, DeleteView):
+    model = TipoExame
+    template_name = 'gestao_hospitalar/confirm_delete_template.html'
+    success_url = reverse_lazy('gestao_hospitalar:tipo_exame_list')
+    
+    def get_queryset(self):
+        return TipoExame.objects.filter(empresa=self.request.user.empresa)
+    
+
+class AreaEspecificaListView(AdminClienteRequiredMixin, ListView):
+    model = AreaEspecifica
+    template_name = 'gestao_hospitalar/area_especifica_list.html'
+    context_object_name = 'areas_especificas'
+
+    def get_queryset(self):
+        return AreaEspecifica.objects.filter(empresa=self.request.user.empresa).select_related('area_corporal')
+
+class AreaEspecificaCreateView(AdminClienteRequiredMixin, CreateView):
+    model = AreaEspecifica
+    form_class = AreaEspecificaForm
+    template_name = 'gestao_hospitalar/form_template.html'
+    success_url = reverse_lazy('gestao_hospitalar:area_especifica_list')
+
+    def form_valid(self, form):
+        form.instance.empresa = self.request.user.empresa
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo'] = "Adicionar Nova Área Específica"
+        context['cancel_url'] = reverse_lazy('gestao_hospitalar:area_especifica_list')
+        return context
+
+class AreaEspecificaUpdateView(AdminClienteRequiredMixin, UpdateView):
+    model = AreaEspecifica
+    form_class = AreaEspecificaForm
+    template_name = 'gestao_hospitalar/form_template.html'
+    success_url = reverse_lazy('gestao_hospitalar:area_especifica_list')
+    
+    def get_queryset(self):
+        return AreaEspecifica.objects.filter(empresa=self.request.user.empresa)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['titulo'] = "Editar Área Específica"
+        context['cancel_url'] = reverse_lazy('gestao_hospitalar:area_especifica_list')
+        return context
+
+class AreaEspecificaDeleteView(AdminClienteRequiredMixin, DeleteView):
+    model = AreaEspecifica
+    template_name = 'gestao_hospitalar/confirm_delete_template.html'
+    success_url = reverse_lazy('gestao_hospitalar:area_especifica_list')
+    
+    def get_queryset(self):
+        return AreaEspecifica.objects.filter(empresa=self.request.user.empresa)

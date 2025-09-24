@@ -94,7 +94,7 @@ function execucaoSAE(csrfToken){
 
         // Envia a atualização para o servidor em segundo plano
         try {
-            await fetch("{% url 'gestao_hospitalar:api_plano_toggle' 0 %}".replace('0', nic.plano_id), {
+            await fetch("{% url 'api_plano_toggle' 0 %}".replace('0', nic.plano_id), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

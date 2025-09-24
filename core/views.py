@@ -11,6 +11,14 @@ def index(request):
     context = {'noticias': noticias_recentes}
     return render(request, 'index.html', context)
 
+def lista_noticias(request):
+    # Simplesmente busca todos os objetos Noticia
+    noticias = Noticia.objects.all().order_by('-data_publicacao')
+    context = {
+        'noticias': noticias
+    }
+    return render(request, 'lista_noticias.html', context)
+
 def sobre(request):
     context = {}
     return render(request, 'sobre.html', context)
@@ -67,3 +75,9 @@ def deletar_noticia(request, pk):
         return redirect('gerenciar_noticias')
     context = {'noticia': noticia}
     return render(request, 'noticia_confirm_delete.html', context)
+
+def prompt_library(request):
+    """
+    Exibe a página da biblioteca de prompts.
+    """
+    return render(request, 'prompt_library.html')

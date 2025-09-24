@@ -1,0 +1,28 @@
+{% extends 'base_dashboard.html' %}
+{% block page_title %}Gerenciar Intervenções NIC{% endblock %}
+{% block dashboard_content %}
+<div class="management-header">
+    <h2 class="text-2xl font-bold text-gray-700">Intervenções de Enfermagem (NIC)</h2>
+    <a href="{% url 'gestao_hospitalar:nic_create' %}" class="btn btn-primary"><i class="fas fa-plus mr-2"></i> Adicionar NIC</a>
+</div>
+<div class="table-responsive">
+    <table class="management-table">
+        <thead><tr><th>Código</th><th>Título da Intervenção</th><th class="text-center">Ações</th></tr></thead>
+        <tbody>
+            {% for nic in intervencoes_nic %}
+            <tr>
+                <td>{{ nic.codigo }}</td>
+                <td>{{ nic.titulo }}</td>
+                <td class="text-center">
+                    <a href="{% url 'gestao_hospitalar:nic_update' nic.pk %}" class="btn-action btn-edit">Editar</a>
+                    <a href="{% url 'gestao_hospitalar:nic_delete' nic.pk %}" class="btn-action btn-delete">Excluir</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" class="text-center text-gray-500 py-4">Nenhuma intervenção NIC cadastrada.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<div class="mt-4"><a href="{% url 'gestao_hospitalar:sae_parametrizacao' %}" class="btn btn-secondary">← Voltar para Parametrização</a></div>
+{% endblock %}

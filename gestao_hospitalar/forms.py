@@ -1,7 +1,123 @@
 from django import forms
 from .models import Ala, Quarto, Leito, Paciente
 from django_select2.forms import Select2Widget, Select2MultipleWidget
-from .models import AvaliacaoFugulin, AvaliacaoSAE
+from django.forms import inlineformset_factory
+from .models import AvaliacaoFugulin, AvaliacaoSAE, TipoExame, AreaEspecifica, AreaCorporal, AchadoClinico, DiagnosticoNANDA, ResultadoNOC, IntervencaoNIC, AtividadeNIC
+
+class IntervencaoNICForm(forms.ModelForm):
+    class Meta:
+        model = IntervencaoNIC
+        fields = ['codigo', 'titulo', 'definicao', 'resultados_noc']
+        widgets = {
+            'codigo': forms.TextInput(attrs={'class': 'form-control'}),
+            'titulo': forms.TextInput(attrs={'class': 'form-control'}),
+            'definicao': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'resultados_noc': Select2MultipleWidget,
+        }
+        help_texts = {
+            'resultados_noc': 'Selecione os resultados NOC que esta intervenção ajuda a alcançar.'
+        }
+    def __init__(self, *args, **kwargs):
+        empresa = kwargs.pop('empresa', None)
+        super().__init__(*args, **kwargs)
+        if empresa:
+            self.fields['resultados_noc'].queryset = ResultadoNOC.objects.filter(empresa=empresa)
+
+# FormSet para gerenciar as AtividadesNIC dentro do formulário da IntervencaoNIC
+AtividadeNICFormSet = inlineformset_factory(
+    IntervencaoNIC,     # Modelo Pai
+    AtividadeNIC,       # Modelo Filho
+    fields=('descricao',), # Campos a serem exibidos para cada atividade
+    extra=1,            # Começa com 1 campo extra para nova atividade
+    can_delete=True,    # Permite excluir atividades
+    widgets={
+        'descricao': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Descreva a atividade de enfermagem'}),
+    }
+)
+
+class ResultadoNOCForm(forms.ModelForm):
+    class Meta:
+        model = ResultadoNOC
+        fields = ['codigo', 'titulo', 'definicao', 'diagnosticos_nanda']
+        widgets = {
+            'codigo': forms.TextInput(attrs={'class': 'form-control'}),
+            'titulo': forms.TextInput(attrs={'class': 'form-control'}),
+            'definicao': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'diagnosticos_nanda': Select2MultipleWidget,
+        }
+        help_texts = {
+            'diagnosticos_nanda': 'Selecione os diagnósticos NANDA aos quais este resultado pode ser aplicado.'
+        }
+
+    def __init__(self, *args, **kwargs):
+        empresa = kwargs.pop('empresa', None)
+        super().__init__(*args, **kwargs)
+        if empresa:
+            self.fields['diagnosticos_nanda'].queryset = DiagnosticoNANDA.objects.filter(empresa=empresa)
+
+
+
+class DiagnosticoNANDAForm(forms.ModelForm):
+    class Meta:
+        model = DiagnosticoNANDA
+        fields = ['codigo', 'titulo', 'definicao', 'achados_relacionados']
+        widgets = {
+            'codigo': forms.TextInput(attrs={'class': 'form-control'}),
+            'titulo': forms.TextInput(attrs={'class': 'form-control'}),
+            'definicao': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+            'achados_relacionados': Select2MultipleWidget,
+        }
+        help_texts = {
+            'achados_relacionados': 'Selecione um ou mais achados clínicos que podem levar a este diagnóstico.'
+        }
+
+    def __init__(self, *args, **kwargs):
+        empresa = kwargs.pop('empresa', None)
+        super().__init__(*args, **kwargs)
+        if empresa:
+            self.fields['achados_relacionados'].queryset = AchadoClinico.objects.filter(empresa=empresa)
+
+class AchadoClinicoForm(forms.ModelForm):
+    class Meta:
+        model = AchadoClinico
+        fields = ['descricao', 'area_especifica', 'tipo_exame']
+        widgets = {
+            'descricao': forms.TextInput(attrs={'class': 'form-control'}),
+            'area_especifica': forms.Select(attrs={'class': 'form-control'}),
+            'tipo_exame': forms.Select(attrs={'class': 'form-control'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        empresa = kwargs.pop('empresa', None)
+        super().__init__(*args, **kwargs)
+        if empresa:
+            self.fields['area_especifica'].queryset = AreaEspecifica.objects.filter(empresa=empresa)
+            self.fields['tipo_exame'].queryset = TipoExame.objects.filter(empresa=empresa)
+
+class TipoExameForm(forms.ModelForm):
+    class Meta:
+        model = TipoExame
+        fields = ['nome']
+        widgets = {
+            'nome': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+class AreaCorporalForm(forms.ModelForm):
+    class Meta:
+        model = AreaCorporal
+        fields = ['nome']
+        widgets = {
+            'nome': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+class AreaEspecificaForm(forms.ModelForm):
+    class Meta:
+        model = AreaEspecifica
+        fields = ['nome', 'area_corporal']
+        widgets = {
+            'nome': forms.TextInput(attrs={'class': 'form-control'}),
+            'area_corporal': forms.Select(attrs={'class': 'form-control'}),
+        }
 
 
 class AvaliacaoSAEForm(forms.ModelForm):

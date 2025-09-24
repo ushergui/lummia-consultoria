@@ -1,0 +1,64 @@
+{% extends 'base_dashboard.html' %}
+
+{% block page_title %}Parametrização da SAE{% endblock %}
+
+{% block dashboard_content %}
+<div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-700">Cadastros de Apoio da SAE</h2>
+    <p class="text-gray-500">Gerencie os dados que alimentarão a ferramenta de avaliação de enfermagem.</p>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% if user.tipo_perfil == 'ADMINISTRADOR' %}
+    <a href="{% url 'gestao_hospitalar:area_corporal_list' %}" class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow">
+        <h3 class="font-semibold text-lg text-gray-800">
+            <i class="fas fa-sitemap mr-2 text-gray-400"></i> Áreas Corporais
+        </h3>
+        <p class="text-gray-600 text-sm mt-1">Cadastro global de Cabeça, Tórax, etc.</p>
+    </a>
+    {% endif %}
+
+    <a href="{% url 'gestao_hospitalar:tipo_exame_list' %}" class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow">
+        <h3 class="font-semibold text-lg text-gray-800">
+            <i class="fas fa-stethoscope mr-2 text-gray-400"></i> Tipos de Exame
+        </h3>
+        <p class="text-gray-600 text-sm mt-1">Cadastre Inspeção, Palpação, etc.</p>
+    </a>
+    <a href="{% url 'gestao_hospitalar:area_especifica_list' %}" class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow">
+        <h3 class="font-semibold text-lg text-gray-800">
+            <i class="fas fa-file mr-2 text-gray-400"></i> Áreas Específicas
+        </h3>
+        <p class="text-gray-600 text-sm mt-1">Cadastre Crânio, Couro Cabeludo, etc.</p>
+    </a>
+
+    <a href="{% url 'gestao_hospitalar:achado_clinico_list' %}" class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow">
+        <h3 class="font-semibold text-lg text-gray-800">
+            <i class="fas fa-notes-medical mr-2 text-gray-400"></i> Achados Clínicos
+        </h3>
+        <p class="text-gray-600 text-sm mt-1">Cadastre os possíveis achados do exame físico.</p>
+    </a>
+    <a href="{% url 'gestao_hospitalar:nanda_list' %}" class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow">
+        <h3 class="font-semibold text-lg text-gray-800">
+            <i class="fas fa-file-medical-alt mr-2 text-gray-400"></i> Diagnósticos NANDA
+        </h3>
+        <p class="text-gray-600 text-sm mt-1">Cadastre e mapeie os diagnósticos de enfermagem.</p>
+    </a>
+
+    <a href="{% url 'gestao_hospitalar:noc_list' %}" class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow">
+        <h3 class="font-semibold text-lg text-gray-800">
+            <i class="fas fa-check-circle mr-2 text-gray-400"></i> Resultados NOC
+        </h3>
+        <p class="text-gray-600 text-sm mt-1">Cadastre e mapeie os resultados esperados.</p>
+    </a>
+    <a href="{% url 'gestao_hospitalar:nic_list' %}" class="bg-white p-6 rounded-lg shadow hover:shadow-lg transition-shadow">
+        <h3 class="font-semibold text-lg text-gray-800">
+            <i class="fas fa-medkit mr-2 text-gray-400"></i> Intervenções NIC
+        </h3>
+        <p class="text-gray-600 text-sm mt-1">Cadastre as intervenções e suas atividades.</p>
+    </a>
+    </div>
+
+<div class="mt-8">
+    <a href="{% url 'gestao_hospitalar:dashboard' %}" class="btn btn-secondary">← Voltar ao Dashboard Hospitalar</a>
+</div>
+{% endblock %}

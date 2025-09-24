@@ -1,0 +1,64 @@
+{% extends 'base_dashboard.html' %}
+{% block page_title %}{{ titulo }}{% endblock %}
+{% block dashboard_content %}
+<form method="post" class="styled-form">
+    {% csrf_token %}
+    
+    {{ form.as_p }}
+
+    <hr class="my-6">
+
+    <h3 class="text-xl font-bold text-gray-700 mb-4">Atividades da Intervenção</h3>
+    {{ atividades_formset.management_form }}
+    <div id="atividades-container" class="space-y-4">
+        {% for form in atividades_formset.forms %}
+        <div class="atividade-form p-4 border rounded-md">
+            {{ form.id }}
+            <div class="form-group">
+                <label for="{{ form.descricao.id_for_label }}">Descrição da Atividade</label>
+                {{ form.descricao }}
+                {% if form.DELETE %}
+                <div class="mt-2">{{ form.DELETE }} <label for="{{ form.DELETE.id_for_label }}">Excluir esta atividade</label></div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div id="empty-form" style="display:none">
+        <div class="atividade-form p-4 border rounded-md">
+            {{ atividades_formset.empty_form.id }}
+            <div class="form-group">
+                <label for="{{ atividades_formset.empty_form.descricao.id_for_label }}">Descrição da Atividade</label>
+                {{ atividades_formset.empty_form.descricao }}
+                </div>
+        </div>
+    </div>
+    
+    <button type="button" id="add-form" class="btn btn-secondary mt-4"><i class="fas fa-plus mr-2"></i>Adicionar Atividade</button>
+
+    <div class="form-actions">
+        <a href="{{ cancel_url }}" class="btn btn-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-primary">Salvar</button>
+    </div>
+</form>
+
+{{ form.media.css }}
+{{ form.media.js }}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const addButton = document.getElementById('add-form');
+    const container = document.getElementById('atividades-container');
+    const emptyForm = document.getElementById('empty-form').innerHTML;
+    const totalForms = document.querySelector('input[name="atividades-TOTAL_FORMS"]');
+    
+    addButton.addEventListener('click', function() {
+        let formNum = parseInt(totalForms.value);
+        let newForm = emptyForm.replace(/__prefix__/g, formNum);
+        container.insertAdjacentHTML('beforeend', newForm);
+        totalForms.value = formNum + 1;
+    });
+});
+</script>
+{% endblock %}

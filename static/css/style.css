@@ -364,3 +364,373 @@ body {
 .main-nav a.btn {
     color: var(--white-color) !important;
 }
+
+
+/* --- SERVICES SECTION --- */
+.services-section {
+    padding: 80px 0;
+    background-color: var(--white-color); /* Fundo branco para contrastar com o cinza das notícias */
+}
+
+.services-section h2 {
+    text-align: center;
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+    color: var(--primary-blue);
+}
+
+.section-subtitle {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto 50px auto;
+    color: var(--light-text);
+    font-size: 1.1rem;
+}
+
+.services-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 30px;
+}
+
+.service-card {
+    background: var(--light-bg);
+    padding: 35px 30px;
+    border-radius: 12px;
+    text-align: center;
+    border: 1px solid var(--border-color);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.service-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow);
+    border-color: transparent;
+}
+
+.service-card i {
+    font-size: 2.5rem;
+    color: var(--primary-blue);
+    margin-bottom: 20px;
+}
+
+.service-card h3 {
+    font-size: 1.3rem;
+    color: var(--primary-blue);
+    margin-bottom: 10px;
+}
+
+.service-card p {
+    color: var(--light-text);
+    line-height: 1.6;
+}
+
+/* --- WHATSAPP SECTION --- */
+.whatsapp-section {
+    padding: 80px 0;
+    background-color: var(--light-bg);
+}
+
+.whatsapp-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 50px;
+    flex-wrap: wrap; /* Para telas menores */
+}
+
+.whatsapp-content img {
+    max-width: 250px;
+    height: auto;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+}
+
+.whatsapp-text {
+    max-width: 500px;
+}
+
+.whatsapp-text h2 {
+    font-size: 2.5rem;
+    color: var(--primary-blue);
+    margin-bottom: 1rem;
+}
+
+.whatsapp-text p {
+    font-size: 1.1rem;
+    color: var(--light-text);
+    margin-bottom: 2rem;
+}
+
+/* Ajuste para telas menores */
+@media (max-width: 768px) {
+    .whatsapp-content {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+
+/* --- ESTILOS ADICIONAIS PARA A PÁGINA "SOBRE" --- */
+
+.page-content .content-heading {
+    color: var(--primary-blue);
+    margin-top: 3rem;      /* Adiciona um bom espaço acima do subtítulo */
+    margin-bottom: 1.5rem; /* Adiciona espaço entre o subtítulo e o texto abaixo */
+    padding-bottom: 0.5rem;
+    font-size: 2.1rem;
+    border-bottom: 2px solid var(--border-color); /* Linha sutil para separar as seções */
+}
+
+.page-content .closing-statement {
+    text-align: center;
+    border-bottom: none; /* A frase final não precisa da linha */
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin-top: 4rem;
+    
+}
+
+/* Estilo de justificação APENAS para a página Sobre */
+.sobre-container p {
+    text-align: justify;
+}
+
+/* --- ESTILOS PARA O LINK DO CARD NA HOME --- */
+a.card-link {
+    text-decoration: none;
+    color: inherit; /* Herda a cor do texto normal */
+    display: block; /* Garante que a área do link cubra todo o card */
+}
+
+/* --- BIBLIOTECA DE PROMPTS --- */
+
+/* Estilo dos cards de categoria */
+.prompt-categories {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+}
+
+.category-card {
+    background: var(--white-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 20px 30px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--light-text);
+}
+
+.category-card i {
+    font-size: 1.5rem;
+    color: var(--light-text);
+    transition: all 0.3s ease;
+}
+
+.category-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow);
+    color: var(--primary-blue);
+}
+
+.category-card:hover i {
+    color: var(--primary-blue);
+}
+
+.category-card.active {
+    background-color: var(--primary-blue);
+    color: var(--white-color);
+    border-color: var(--primary-blue);
+    box-shadow: 0 8px 20px rgba(10, 61, 98, 0.2);
+}
+
+.category-card.active i {
+    color: var(--white-color);
+}
+
+/* Estilo da área de exibição dos prompts */
+.prompt-group {
+    display: none; /* Escondido por padrão */
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.prompt-group.active {
+    display: block; /* Mostra o grupo ativo */
+}
+
+.prompt-card {
+    background: var(--white-color);
+    border: 1px solid var(--border-color);
+    border-left: 5px solid var(--primary-blue);
+    border-radius: 8px;
+    margin-bottom: 25px;
+    padding: 25px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    position: relative; /* Para posicionar o botão de copiar */
+}
+
+.prompt-card h4 {
+    font-size: 1.3rem;
+    color: var(--primary-blue);
+    margin-bottom: 15px;
+}
+
+.prompt-content pre {
+    background-color: #f5f7fa;
+    padding: 20px;
+    border-radius: 5px;
+    color: #333;
+    white-space: pre-wrap; /* Garante a quebra de linha */
+    word-wrap: break-word;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.btn-copy {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    background-color: var(--primary-blue);
+    color: var(--white-color);
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+}
+
+.btn-copy:hover {
+    background-color: #082f49;
+}
+
+.btn-copy.copied {
+    background-color: #28a745; /* Verde para feedback de sucesso */
+}
+
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+
+/* --- SEÇÃO DE CONTATO (WHATSAPP E INSTAGRAM) --- */
+.contact-section {
+    padding: 40px 0 80px 0; /* Diminui o padding-top de 80px para 40px */
+    background-color: var(--light-bg);
+}
+
+/* O container principal com 3 colunas */
+.contact-container {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    gap: 40px;
+}
+
+/* Texto da coluna central */
+.contact-text {
+    flex-basis: 35%;
+    text-align: center;
+}
+
+.contact-text h2 {
+    font-size: 2.5rem;
+    color: var(--primary-blue);
+    margin-bottom: 1rem;
+}
+
+.contact-text p {
+    font-size: 1.1rem;
+    color: var(--light-text);
+    line-height: 1.7;
+}
+
+/* Estilo dos cards de QR Code */
+.contact-card {
+    flex-basis: 25%;
+    background-color: var(--white-color);
+    border-radius: 12px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.contact-card img {
+    max-width: 200px;
+    height: auto;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+/* Novo estilo para o agrupamento ícone + título */
+.card-title-with-icon {
+    display: flex; /* Coloca o ícone e o h3 lado a lado */
+    align-items: center;
+    justify-content: center; /* Centraliza o grupo inteiro */
+    gap: 10px; /* Espaço entre o ícone e o título */
+    margin-bottom: 5px; /* Ajusta o espaçamento abaixo */
+}
+
+.contact-icon {
+    width: 30px; /* Tamanho do ícone */
+    height: 30px;
+    object-fit: contain; /* Garante que a imagem se ajuste sem cortar */
+    border: none; /* Remove a borda padrão do QR Code */
+    border-radius: 0; /* Remove o border-radius padrão do QR Code */
+}
+
+.contact-card h3 {
+    color: var(--primary-blue);
+    font-size: 1.4rem;
+    margin: 0; /* Zera margens padrão para evitar conflitos */
+}
+
+.contact-card p {
+    color: var(--light-text);
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.btn-contact-link {
+    display: inline-block;
+    background-color: var(--primary-blue);
+    color: var(--white-color);
+    padding: 8px 20px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    margin-top: 10px;
+    transition: all 0.3s ease;
+}
+
+.btn-contact-link:hover {
+    background-color: #082f49;
+    transform: translateY(-2px);
+}
+
+
+/* --- RESPONSIVIDADE PARA CELULARES --- */
+@media (max-width: 992px) {
+    .contact-container {
+        flex-direction: column;
+    }
+
+    .contact-text {
+        order: -1;
+        margin-bottom: 20px;
+    }
+}
