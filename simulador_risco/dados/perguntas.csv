@@ -1,0 +1,61 @@
+numero,texto
+1,A atividade é exclusivamente para produção de polpa de fruta para bebida?
+2,A produção é artesanal?
+3,A atividade inclui a produção de conservas?
+4,A atividade inclui a produção de bebidas à base de soja?
+5,A atividade inclui a produção de óleos e gorduras comestíveis?
+6,A produção é artesanal e de alimentos com dispensa de registro sanitário?
+7,A bebida fabricada possui Padrão de Identidade e Qualidade (PIQ) definido pelo MAPA?
+8,O produto fabricado (embalagem  artefato  etc.) é destinado a entrar em contato direto com alimentos?
+9,A embalagem fabricada é destinada à esterilização de produtos para saúde?
+10,"O álcool fabricado é classificado como ou destinado à fabricação de: medicamentos  produtos para saúde	 cosméticos	 saneantes ou alimentos?
+"
+11,O produto fabricado é classificado como saneante?
+12,A atividade é a fabricação ou envase de gases medicinais?
+13,A atividade é a fabricação de produtos químicos  insumos ou aditivos para as áreas de medicamentos  produtos para saúde  cosméticos  saneantes ou alimentos?
+14,O produto fabricado é um adesivo ou selante destinado ao uso em produtos para saúde ou que entrará em contato com alimentos?
+15,A atividade envolve a fabricação de produtos para saúde  ou de insumos para as áreas reguladas (medicamentos  cosméticos  saneantes  alimentos)?
+16,O produto fabricado é classificado como produto para saúde (dispositivo médico)?
+17,O produto fabricado é classificado como produto para saúde ou produto de higiene pessoal (ex: chupetas  bicos de mamadeira)?
+18,O produto fabricado é uma embalagem plástica para contato direto com alimentos?
+19,O produto fabricado se enquadra como cadeira de rodas ou outro veículo para pessoas com deficiência física?
+20,O produto fabricado se enquadra como escova de dentes?
+21,O produto fabricado se enquadra com ação odorizante de ambiente?
+22,O estabelecimento comercializa produtos para saúde de uso profissional?
+23,A atividade de comércio atacadista de bebidas inclui o engarrafamento de água mineral?
+24,A atividade envolve o comércio atacadista  importação  exportação ou armazenamento de produtos para saúde?
+25,A atividade envolve o comércio de alimentos?
+26,O produto comercializado (ex: lubrificante  resina) será utilizado em equipamentos com contato direto com alimentos?
+27,O produto comercializado (ex: solvente  embalagem  fios e fibra) entrará em contato direto com alimentos ou será utilizado em equipamentos com essa finalidade?
+28,A atividade envolve o comércio atacadista  importação  exportação ou armazenamento de produtos químicos controlados  medicamentos  cosméticos  saneantes  gases medicinais ou seus insumos?
+29,A atividade envolve o comércio atacadista  importação  exportação ou armazenamento de produtos regulados pela vigilância sanitária (medicamentos  produtos para saúde  cosméticos  saneantes  alimentos  etc.)?
+30,O estabelecimento comercializa produtos regulados pela vigilância sanitária (cosméticos  saneantes  produtos para saúde de uso leigo ou alimentos)?
+31,O estabelecimento comercializa medicamentos ou produtos para saúde de uso profissional?
+32,A atividade envolve o transporte ou armazenamento de produtos regulados pela vigilância sanitária (medicamentos  produtos para saúde  cosméticos  saneantes  alimentos  material biológico)?
+33,O serviço de transporte de passageiros inclui o fornecimento de alimentos (catering ou serviço de bordo)?
+34,O estabelecimento (hotel  escola  etc.) oferece serviço de alimentação (restaurante  lanchonete  buffet  cantina)?
+35,A atividade envolve procedimentos invasivos ou procedimento de estética?
+36,A atividade envolve manipulação de alimentos?
+37,A atividade envolve a realização de análises laboratoriais em produtos sujeitos à vigilância sanitária (alimentos  água  medicamentos  cosméticos  etc.)?
+38,A atividade veterinária utiliza produtos controlados pela vigilância sanitária (ex: medicamentos controlados) ou realiza serviços de radiologia diagnóstica?
+39,O estabelecimento comercializa produtos para saúde de uso leigo?
+40,A atividade envolve transformação artesanal?
+41,"Desenvolve pesquisas relacionadas a medicamentos, insumos farmacêuticos, cosméticos, saneantes e/ou produtos para saúde (dispositivos médicos), alimentos e pesquisas e desenvolvimento em saúde humana para fins terapêuticos?"
+42,Comercializa Produtos para Saúde de uso profissional?
+43,A atividade envolve o processamento de produtos para saúde (materiais médico hospitalares).
+44,A atividade envolve o serviço de buffet/catering associado?
+45,É uma unidade prisional ou socioeducativa?
+46,Realização apenas de exames psicotécnicos?
+47,A atividade envolve de procedimentos invasivos?
+48,A atividade envolve manipulação de alimentos?
+49,A atividade envolverá o atendimento por optometrista com nível superior (tecnólogo ou graduado) OU Se realiza procedimentos invasivos e/ou procedimento com utilização de anestesia e sedação ou uso de radiação ionizante ou telerradiologia( comando remoto ou laudo à distância).
+50,A atividade oferecer atendimento de assistencia a saúde?
+51,Possui leitos de internação?
+52,O estabelecimento funciona como comunidade terapêutica?
+53,O estabelecimento funciona como Centro Dia para idoso?
+54,A instituição oferece atenção integral a pessoas com deficiência intelectual e múltipla?
+55,Haverá processamento de roupas de serviços de saúde?
+56,Realiza procedimento de micropigmentação da pele ou procedimento estetico invasivo não cirúrgico sob responsabilidade técnica de profissional de nível superior da área da saúde?
+57,Realiza atividade de necropsia?
+58,"A atividade envolve o envasamento e empacotamento sob contrato de produtos regulados pela vigilância sanitária (medicamentos, produtos para saúde, cosméticos, saneantes, alimentos, material biológico)?"
+59,A atividade envolve procedimentos invasivos ou procedimento de estética?

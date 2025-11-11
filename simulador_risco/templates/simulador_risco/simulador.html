@@ -1,0 +1,408 @@
+{% extends "bases.html" %}
+
+{% block title %}Simulador de Risco Sanitário SES/MG - Lummia Consultoria{% endblock %}
+
+{% block content %}
+<div class="card shadow-lg border-0">
+    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+        <h2 class="h4 mb-0"><i class="bi bi-activity me-2"></i> Simulador de Risco Sanitário - SES/MG</h2>
+        <button id="btnLimpar" class="btn btn-sm btn-outline-light" style="display: none;"><i class="bi bi-arrow-clockwise me-1"></i> Nova Análise</button>
+    </div>
+    <div class="card-body p-lg-4">
+        <p class="card-text text-muted mb-4">Baseado na Resolução SES/MG N° 10.601, de 21 de Outubro de 2025.</p>
+
+        <div id="inputArea">
+            <div class="row g-3 align-items-start">
+                <div class="col-lg-6">
+                    <label for="cnpjInput" class="form-label"><strong>1. Consulte por CNPJ (Recomendado)</strong></label>
+                    <div class="input-group">
+                        <input type="text" id="cnpjInput" class="form-control" placeholder="00.000.000/0001-00" maxlength="18">
+                        <button class="btn btn-primary" id="btnConsultarCnpj" type="button">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
+                            <i class="bi bi-search"></i> Consultar
+                        </button>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <label for="cnaeSearch" class="form-label"><strong>2. Ou adicione CNAEs manualmente</strong></label>
+                    <div class="input-group">
+                        <select id="cnaeSearch" class="form-select" data-placeholder="Digite 3+ caracteres do código ou descrição..."></select>
+                        <button class="btn btn-success" id="btnAddCnae" type="button" title="Adicionar CNAE à análise"><i class="bi bi-plus-lg"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <hr class="my-4">
+
+        <div id="loading" class="text-center my-4" style="display: none;">
+            <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"></div>
+            <p class="mt-2 fs-5">Consultando dados...</p>
+        </div>
+
+        <div id="resultsArea" style="display: none;">
+            <div id="empresaInfo" class="card bg-light mb-4" style="display: none;"></div>
+            <h3 class="mb-3">Resultado da Análise</h3>
+            <div id="resultadoFinal" class="alert d-flex align-items-center" role="alert">
+                <h4 class="alert-heading mb-0 me-3">Risco da Empresa:</h4>
+                <strong id="riscoFinalTexto" class="fs-3"></strong>
+            </div>
+            <div id="cnaeListContainer" class="mb-4"></div>
+        </div>
+        
+        <div class="alert alert-warning mt-4 small">
+            <strong>Aviso Legal:</strong> Este é um simulador e não substitui a consulta oficial. A classificação final pode depender de interpretações da Vigilância Sanitária. A regra de enquadramento é sempre no nível de risco mais elevado.
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block scripts %}
+{# --- DEPENDÊNCIAS PARA A BUSCA INTELIGENTE (SELECT2) --- #}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+    // --- FUNÇÕES AUXILIARES GLOBAIS ---
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    function inicializarTooltips() {
+        const oldTooltips = document.querySelectorAll('.tooltip');
+        oldTooltips.forEach(tt => tt.remove());
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+    }
+
+    // --- LÓGICA PRINCIPAL DA APLICAÇÃO ---
+    document.addEventListener('DOMContentLoaded', () => {
+        const ui = {
+            cnpjInput: document.getElementById('cnpjInput'),
+            btnConsultarCnpj: document.getElementById('btnConsultarCnpj'),
+            cnaeSearch: $('#cnaeSearch'),
+            btnAddCnae: document.getElementById('btnAddCnae'),
+            btnLimpar: document.getElementById('btnLimpar'),
+            loading: document.getElementById('loading'),
+            inputArea: document.getElementById('inputArea'),
+            resultsArea: document.getElementById('resultsArea'),
+            empresaInfo: document.getElementById('empresaInfo'),
+            resultadoFinal: document.getElementById('resultadoFinal'),
+            riscoFinalTexto: document.getElementById('riscoFinalTexto'),
+            cnaeListContainer: document.getElementById('cnaeListContainer'),
+        };
+
+        let state = {
+            cnaesAnalisados: new Set(),
+            dadosCNAEs: [],
+            dadosPerguntas: [],
+            respostasCNAE: {},
+        };
+        
+        const CONSTS = {
+            RISCO_MAP: {'NA': 0, 'I': 1, 'II': 2, 'III': 3},
+            CORES: {0: 'info', 1: 'success', 2: 'warning', 3: 'danger'},
+            TITULOS: {
+                0: 'N/A (Não se Aplica)', 1: 'Nível de Risco I',
+                2: 'Nível de Risco II', 3: 'Nível de Risco III'
+            },
+            DESCRICOES: {
+                0: 'Atividades que não se aplicam à regulação da vigilância sanitária, dispensadas de alvará sanitário.',
+                1: 'Baixo risco: Atividades com baixa possibilidade de provocar eventos adversos à saúde. O funcionamento pode iniciar sem inspeção prévia, mas está sujeito à fiscalização posterior.',
+                2: 'Médio risco: Atividades com possibilidade de provocar agravos temporários ou reversíveis à saúde. É concedido licenciamento sanitário simplificado, sujeito a inspeção e fiscalização posterior.',
+                3: 'Alto risco: Atividades com alta possibilidade de provocar agravos com riscos à saúde. É exigida a realização de análise e/ou inspeção sanitária prévia ao início do funcionamento.'
+            }
+        };
+
+        // --- INICIALIZAÇÃO E EVENTOS ---
+        ui.cnaeSearch.select2({
+            theme: 'bootstrap-5',
+            ajax: {
+                url: '{% url "simulador_risco:api_buscar_cnae" %}',
+                dataType: 'json', delay: 250, data: params => ({ termo: params.term }),
+                processResults: data => ({ results: data }), cache: true
+            },
+            minimumInputLength: 3
+        });
+
+        ui.cnpjInput.addEventListener('input', (e) => {
+            let v = e.target.value.replace(/\D/g,'').replace(/^(\d{2})(\d)/,'$1.$2').replace(/^(\d{2})\.(\d{3})(\d)/,'$1.$2.$3').replace(/\.(\d{3})(\d)/,'.$1/$2').replace(/(\d{4})(\d)/,'$1-$2');
+            e.target.value = v;
+        });
+        
+        ui.btnLimpar.addEventListener('click', resetApp);
+        ui.btnConsultarCnpj.addEventListener('click', handleCnpjSearch);
+        ui.btnAddCnae.addEventListener('click', handleAddCnae);
+
+        // --- FUNÇÕES DE LÓGICA PRINCIPAL ---
+        function resetApp() {
+            ui.cnpjInput.value = '';
+            ui.cnaeSearch.val(null).trigger('change');
+            ui.resultsArea.style.display = 'none';
+            ui.inputArea.style.display = 'block';
+            ui.btnLimpar.style.display = 'none';
+            state.cnaesAnalisados.clear();
+            ui.cnaeListContainer.innerHTML = '';
+            ui.empresaInfo.style.display = 'none';
+        }
+
+        async function handleCnpjSearch() {
+            const cnpj = ui.cnpjInput.value.replace(/\D/g, '');
+            if (cnpj.length !== 14) { alert('Digite um CNPJ válido.'); return; }
+            toggleLoading(true, ui.btnConsultarCnpj);
+            try {
+                const response = await fetch(`/simulador-risco-ses/api/consultar-cnpj/${cnpj}/`);
+                if (!response.ok) throw new Error('Falha ao consultar CNPJ. Verifique o número e a conexão.');
+                const data = await response.json();
+
+                renderizarInfoEmpresa(data.empresa_data);
+                
+                const cnaes = [];
+                if (data.cnaes && data.cnaes.length > 0) {
+                    data.cnaes.forEach(c => { if (c && c !== "0") cnaes.push(String(c)) });
+                }
+
+                state.cnaesAnalisados = new Set(cnaes);
+                await consultarCnaes();
+            } catch (error) {
+                alert(error.message);
+                ui.resultsArea.style.display = 'none';
+            } finally {
+                toggleLoading(false, ui.btnConsultarCnpj);
+            }
+        }
+
+        function handleAddCnae() {
+            const cnaeSelecionado = ui.cnaeSearch.val();
+            if (cnaeSelecionado) {
+                state.cnaesAnalisados.add(cnaeSelecionado);
+                consultarCnaes();
+                ui.cnaeSearch.val(null).trigger('change');
+            }
+        }
+
+        async function consultarCnaes() {
+            const cnaesLista = [...state.cnaesAnalisados];
+            if (cnaesLista.length === 0) { renderizarListaCNAEs(); calcularRiscoFinal(); return; }
+            toggleLoading(true);
+
+            const response = await fetch('{% url "simulador_risco:api_consultar_cnaes" %}', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json', 'X-CSRFToken': csrftoken},
+                body: JSON.stringify({ cnaes: cnaesLista })
+            });
+            
+            toggleLoading(false);
+            if (!response.ok) { ui.riscoFinalTexto.innerHTML = "Erro."; return; }
+
+            const data = await response.json();
+            state.dadosCNAEs = data.cnaes_processados;
+            state.dadosPerguntas = data.perguntas_necessarias;
+            state.respostasCNAE = {};
+
+            renderizarListaCNAEs();
+            calcularRiscoFinal();
+            ui.resultsArea.style.display = 'block';
+            ui.btnLimpar.style.display = 'block';
+        }
+
+        // --- FUNÇÕES DE RENDERIZAÇÃO E CÁLCULO (COM MELHORIA DO ACORDEÃO) ---
+        function renderizarListaCNAEs() { // <!-- MUDANÇA NESSA FUNÇÃO -->
+            state.dadosCNAEs.sort((a, b) => b.ordem - a.ordem);
+            let html = state.dadosCNAEs.length > 0 ? '<h5 class="mb-3">CNAEs Identificados:</h5><div class="list-group">' : '';
+            
+            state.dadosCNAEs.forEach(cnae => {
+                const textColor = ['warning', 'info', 'light'].includes(cnae.cor) ? 'text-dark' : '';
+                
+                // Lógica para adicionar o "+" ao CNAE individual
+                let riscoBaseDisplay = cnae.risco_base === 'NA' ? 'N/A' : cnae.risco_base;
+                if (cnae.risco_base === 'III' && !cnae.dispensado_projeto) {
+                    riscoBaseDisplay += '+';
+                }
+
+                const hasQuestions = cnae.risco_base === 'P';
+                const collapseId = `collapse-${cnae.codigo}`;
+                const itemClass = hasQuestions ? 'list-group-item list-group-item-action' : 'list-group-item';
+                const collapseAttrs = hasQuestions ? `data-bs-toggle="collapse" href="#${collapseId}" role="button" aria-expanded="false" aria-controls="${collapseId}"` : '';
+
+                html += `<div class="${itemClass}" id="cnae-item-${cnae.codigo}">
+                            <div class="d-flex w-100 justify-content-between align-items-center" ${collapseAttrs}>
+                                <h6 class="mb-1">${cnae.codigo_formatado} - ${cnae.descricao}</h6>
+                                <span class="badge bg-${cnae.cor} ${textColor} rounded-pill p-2" data-bs-toggle="tooltip" data-bs-placement="top" title="${cnae.tooltip}">${riscoBaseDisplay}</span>
+                            </div>`;
+
+                if (hasQuestions) {
+                    html += `<div class="collapse" id="${collapseId}">
+                                <div class="mt-3 p-3 bg-light rounded">`;
+                    cnae.perguntas_nums.forEach(numPergunta => {
+                        const pergunta = state.dadosPerguntas.find(p => p.numero === numPergunta);
+                        if (pergunta) {
+                            const radioName = `p_${pergunta.numero}_cnae_${cnae.codigo}`;
+                            const opcoesHtml = pergunta.opcoes.map(opcao => {
+                                const isChecked = state.respostasCNAE[cnae.codigo]?.[pergunta.numero] === opcao.risco ? 'checked' : '';
+                                return `<div class="form-check form-check-inline">
+                                            <input class="form-check-input cnae-pergunta-radio" type="radio" name="${radioName}" value="${opcao.risco}" data-num="${pergunta.numero}" data-cnae-code="${cnae.codigo}" ${isChecked}>
+                                            <label class="form-check-label">${opcao.texto}</label>
+                                        </div>`;
+                            }).join('');
+                            html += `<div class="mb-2"><p class="mb-1 small"><strong>Pergunta ${pergunta.numero}:</strong> ${pergunta.texto}</p>${opcoesHtml}</div>`;
+                        }
+                    });
+                    html += `</div></div>`;
+                }
+                html += '</div>';
+            });
+            html += state.dadosCNAEs.length > 0 ? '</div>' : '';
+            
+            ui.cnaeListContainer.innerHTML = html;
+
+            ui.cnaeListContainer.querySelectorAll('.cnae-pergunta-radio').forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    const { num, cnaeCode } = e.target.dataset;
+                    if (!state.respostasCNAE[cnaeCode]) state.respostasCNAE[cnaeCode] = {};
+                    state.respostasCNAE[cnaeCode][num] = e.target.value;
+                    
+                    atualizarRiscoCNAEIndividual(cnaeCode);
+                    calcularRiscoFinal();
+                });
+            });
+
+            inicializarTooltips();
+        }
+
+        function atualizarRiscoCNAEIndividual(cnaeCode) {
+    const cnaeItem = state.dadosCNAEs.find(c => c.codigo === cnaeCode);
+    if (!cnaeItem || cnaeItem.risco_base !== 'P') return;
+
+    let riscoMaxLocal = 0;
+    const todasRespondidas = cnaeItem.perguntas_nums.every(num => state.respostasCNAE[cnaeCode]?.[num]);
+
+    if (todasRespondidas) {
+        cnaeItem.perguntas_nums.forEach(num => {
+            const respostaRisco = state.respostasCNAE[cnaeCode][num];
+            riscoMaxLocal = Math.max(riscoMaxLocal, CONSTS.RISCO_MAP[respostaRisco] || 0);
+        });
+    }
+    
+    const badge = document.querySelector(`#cnae-item-${cnaeCode} .badge`);
+    if (badge) {
+        let novoRiscoTexto = todasRespondidas ? CONSTS.TITULOS[riscoMaxLocal].replace('Nível de Risco ', '').replace('N/A (Não se Aplica)', 'N/A') : 'P';
+        
+        // <<-- LÓGICA DO TOOLTIP E DO "+" ADICIONADA AQUI
+        let novoTooltip = todasRespondidas ? CONSTS.DESCRICOES[riscoMaxLocal] : cnaeItem.tooltip;
+        if (riscoMaxLocal === 3 && !cnaeItem.dispensado_projeto) {
+            novoRiscoTexto += '+';
+            novoTooltip = 'Nível de Risco III com exigência de projeto arquitetônico aprovado';
+        }
+
+        const novaCor = todasRespondidas ? CONSTS.CORES[riscoMaxLocal] : 'secondary';
+        const novoTextColor = ['warning', 'info'].includes(novaCor) ? 'text-dark' : '';
+
+        badge.textContent = novoRiscoTexto;
+        badge.className = `badge bg-${novaCor} ${novoTextColor} rounded-pill p-2`;
+        
+        // Atualiza o tooltip do Bootstrap dinamicamente
+        const tooltipInstance = bootstrap.Tooltip.getInstance(badge);
+        if (tooltipInstance) {
+            tooltipInstance.setContent({ '.tooltip-inner': novoTooltip });
+        }
+    }
+    
+    if(todasRespondidas) {
+        const collapseElement = document.getElementById(`collapse-${cnaeCode}`);
+        if(collapseElement) {
+            const bsCollapse = bootstrap.Collapse.getInstance(collapseElement) || new bootstrap.Collapse(collapseElement, {toggle: false});
+            bsCollapse.hide();
+        }
+    }
+}
+        
+        function calcularRiscoFinal() { // <!-- MUDANÇA NESSA FUNÇÃO -->
+            let riscoMaxGlobal = 0;
+            let projetoObrigatorio = false; 
+
+            state.dadosCNAEs.forEach(cnae => {
+                let riscoAtualNum = 0;
+                const cnaeRespostas = state.respostasCNAE[cnae.codigo];
+
+                if (cnae.risco_base === 'P' && cnaeRespostas) {
+                    let riscoMaxLocal = 0;
+                    let todasRespondidasLocal = cnae.perguntas_nums.every(num => cnaeRespostas[num]);
+                    if (todasRespondidasLocal) {
+                        cnae.perguntas_nums.forEach(num => {
+                            riscoMaxLocal = Math.max(riscoMaxLocal, CONSTS.RISCO_MAP[cnaeRespostas[num]] || 0);
+                        });
+                        riscoAtualNum = riscoMaxLocal;
+                    }
+                } else if (cnae.risco_base !== 'P') {
+                    riscoAtualNum = CONSTS.RISCO_MAP[cnae.risco_base] || 0;
+                }
+                
+                if (riscoAtualNum > riscoMaxGlobal) {
+                    riscoMaxGlobal = riscoAtualNum;
+                    projetoObrigatorio = (riscoAtualNum === 3 && !cnae.dispensado_projeto);
+                } else if (riscoAtualNum === 3 && riscoMaxGlobal === 3) {
+                    if (!cnae.dispensado_projeto) {
+                        projetoObrigatorio = true;
+                    }
+                }
+            });
+            
+            const perguntasTotais = state.dadosCNAEs.filter(c => c.risco_base === 'P').reduce((acc, cnae) => acc + cnae.perguntas_nums.length, 0);
+            const perguntasRespondidas = Object.values(state.respostasCNAE).reduce((acc, obj) => acc + Object.keys(obj).length, 0);
+            const pendentes = perguntasTotais > perguntasRespondidas;
+            
+            const corFinal = CONSTS.CORES[riscoMaxGlobal];
+            let tituloFinal = CONSTS.TITULOS[riscoMaxGlobal];
+            let descricaoFinal = CONSTS.DESCRICOES[riscoMaxGlobal];
+
+            if (riscoMaxGlobal === 3 && projetoObrigatorio) {
+                tituloFinal += '+';
+                // Tooltip aprimorado
+                descricaoFinal = 'Alto Risco com obrigatoriedade de aprovação de projeto arquitetônico.';
+            }
+
+            const textColor = ['warning', 'info'].includes(corFinal) ? 'text-dark' : '';
+            
+            ui.resultadoFinal.className = `alert alert-${corFinal} d-flex align-items-center ${textColor}`;
+            ui.riscoFinalTexto.innerHTML = `${tituloFinal} <i class="bi bi-info-circle-fill ms-2" style="cursor: pointer;" data-bs-toggle="tooltip" data-bs-placement="top" title="${descricaoFinal}"></i>`;
+            
+            if (pendentes) { ui.riscoFinalTexto.innerHTML += ` <span class="badge bg-dark ms-2">PENDENTE</span>`; }
+            inicializarTooltips();
+        }
+        
+        function toggleLoading(isLoading, button = null) {
+            ui.loading.style.display = isLoading ? 'block' : 'none';
+            if (isLoading) { ui.resultsArea.style.display = 'none'; }
+            if(button) {
+                button.disabled = isLoading;
+                const spinner = button.querySelector('.spinner-border');
+                const icon = button.querySelector('.bi');
+                if (spinner) spinner.style.display = isLoading ? 'inline-block' : 'none';
+                if (icon) icon.style.display = isLoading ? 'none' : 'inline-block';
+            }
+        }
+        
+        function renderizarInfoEmpresa(data) {
+            if (!data || !data.razao_social) { ui.empresaInfo.style.display = 'none'; return; }
+            ui.empresaInfo.innerHTML = `<div class="card-body"><h5 class="card-title">${data.razao_social}</h5><p class="card-text mb-1"><strong>Nome Fantasia:</strong> ${data.nome_fantasia || 'N/A'}</p><p class="card-text"><strong>Situação:</strong> ${data.situacao_cadastral}</p></div>`;
+            ui.empresaInfo.style.display = 'block';
+        }
+    });
+</script>
+{% endblock %}

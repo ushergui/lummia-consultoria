@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'gestao_hospitalar',
     'django_select2',
     'django_extensions',
+    'simulador_risco',
 ]
 
 MIDDLEWARE = [
