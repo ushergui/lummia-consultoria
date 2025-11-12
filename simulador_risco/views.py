@@ -49,6 +49,7 @@ def formatar_cnae(codigo):
         return f"{codigo[0:4]}-{codigo[4]}/{codigo[5:]}"
     return codigo
 
+@csrf_exempt
 def api_consultar_cnaes(request):
     if request.method != 'POST':
         return JsonResponse({'erro': 'Metodo nao permitido'}, status=405)
