@@ -4,6 +4,7 @@ from .models import CNAE
 import requests # Lembre-se de instalar
 import json
 from django.db.models import Q 
+from django.views.decorators.csrf import csrf_exempt
 
 def pagina_simulador(request):
     # View principal que renderiza o HTML da ferramenta
