@@ -107,5 +107,12 @@ LOGOUT_REDIRECT_URL = 'index'
 CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS', 'http://127.0.0.1').split(',')
 
 if not DEBUG:
+    # Garante que os cookies só sejam enviados via HTTPS
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
+    
+    # Define o domínio para os cookies, começando com um ponto.
+    # Isso faz com que o cookie seja válido para 'lummia.app.br' E 'www.lummia.app.br'.
+    # Use o seu domínio principal aqui.
+    SESSION_COOKIE_DOMAIN = ".lummia.app.br"
+    CSRF_COOKIE_DOMAIN = ".lummia.app.br"
