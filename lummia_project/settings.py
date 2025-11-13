@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'django_select2',
     'django_extensions',
     'simulador_risco',
+    'django_recaptcha',
 ]
 
 MIDDLEWARE = [
@@ -116,3 +117,7 @@ if not DEBUG:
     # Use o seu domínio principal aqui.
     SESSION_COOKIE_DOMAIN = ".lummia.app.br"
     CSRF_COOKIE_DOMAIN = ".lummia.app.br"
+
+
+RECAPTCHA_PUBLIC_KEY = os.getenv('RECAPTCHA_PUBLIC_KEY')
+RECAPTCHA_PRIVATE_KEY = os.getenv('RECAPTCHA_PRIVATE_KEY')
