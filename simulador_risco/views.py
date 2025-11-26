@@ -2,7 +2,7 @@
 
 from django.shortcuts import render
 from django.http import JsonResponse
-from .models import CNAE
+from .models import CNAE, ClassificacaoAmbiental
 import requests 
 import json
 from django.db.models import Q 
@@ -158,3 +158,167 @@ def formatar_cnae(codigo):
     if codigo and len(codigo) == 7:
         return f"{codigo[0:4]}-{codigo[4]}/{codigo[5:]}"
     return codigo
+
+def simulador_ambiental(request):
+    resultado = None
+    risco_geral = "Não Classificado"
+    cor_risco = "secondary" # cinza padrão
+    mensagem_resultado = "Insira os CNAEs para verificar a classificação."
+    cnaes_encontrados = []
+    cnaes_nao_encontrados = []
+
+    if request.method == 'POST':
+        # Pega o input do usuário (CNPJ ou Lista de CNAEs)
+        # Aqui focamos na lista de CNAEs. Se tiver lógica de API de CNPJ pronta, 
+        # você pode adaptar para preencher a lista 'cnaes_input' automaticamente.
+        cnaes_input = request.POST.get('cnaes', '')
+        
+        # Limpa e separa os códigos (aceita vírgula, ponto e vírgula, quebra de linha)
+        # Exemplo: "0111-3/01, 0111302" vira ['0111301', '0111302']
+        codigos_limpos = re.findall(r'\d+', cnaes_input)
+        
+        # Lista para guardar objetos de ClassificacaoAmbiental encontrados
+        classificacoes = []
+        
+        for codigo in codigos_limpos:
+            # Tenta buscar CNAE base
+            try:
+                cnae_obj = CNAE.objects.get(codigo=codigo)
+                
+                # Busca as classificações ambientais vinculadas a este CNAE
+                # Um CNAE pode ter mais de uma classificação (ex: riscos diferentes dependendo do porte/detalhe)
+                itens_ambientais = ClassificacaoAmbiental.objects.filter(cnae=cnae_obj)
+                
+                if itens_ambientais.exists():
+                    for item in itens_ambientais:
+                        classificacoes.append(item)
+                        cnaes_encontrados.append(codigo)
+                else:
+                    # CNAE existe na base IBGE, mas não tem classificação específica no Decreto Municipal
+                    # Pode ser tratado como "Não Listada" ou "Risco I" dependendo da regra.
+                    # Vamos marcar como "Sem classificação específica encontrada"
+                    cnaes_nao_encontrados.append(f"{codigo} (Sem classificação ambiental)")
+                    
+            except CNAE.DoesNotExist:
+                cnaes_nao_encontrados.append(codigo)
+
+        # Lógica de Cálculo do Risco Geral (Hierarquia: III > II > I)
+        if classificacoes:
+            riscos = [c.nivel_risco for c in classificacoes if c.nivel_risco]
+            
+            if 'III' in riscos:
+                risco_geral = 'III'
+                cor_risco = 'danger' # Vermelho
+                mensagem_resultado = "ATIVIDADE DE ALTO RISCO AMBIENTAL"
+            elif 'II' in riscos:
+                risco_geral = 'II'
+                cor_risco = 'warning' # Amarelo/Laranja
+                mensagem_resultado = "ATIVIDADE DE MÉDIO RISCO AMBIENTAL"
+            elif 'I' in riscos:
+                risco_geral = 'I'
+                cor_risco = 'success' # Verde
+                mensagem_resultado = "ATIVIDADE DE BAIXO RISCO AMBIENTAL (Dispensado de Licenciamento)"
+            else:
+                risco_geral = "Não Definido"
+        elif cnaes_input:
+             mensagem_resultado = "Nenhuma classificação ambiental encontrada para os códigos informados."
+
+        resultado = {
+            'classificacoes': classificacoes,
+            'risco_geral': risco_geral,
+            'cor_risco': cor_risco,
+            'mensagem': mensagem_resultado,
+            'nao_encontrados': cnaes_nao_encontrados
+        }
+
+    return render(request, 'simulador_risco/simulador_ambiental.html', {'resultado': resultado})
+
+
+@csrf_exempt
+def api_consultar_cnaes_ambiental(request):
+    """
+    API específica para o Simulador Ambiental.
+    Recebe lista de CNAEs via JSON, consulta ClassificacaoAmbiental e retorna JSON estruturado.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'erro': 'Método não permitido'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        
+        # Validação reCAPTCHA (Reutilizando sua função _is_recaptcha_valid)
+        recaptcha_response = data.get('g-recaptcha-response')
+        if not _is_recaptcha_valid(recaptcha_response):
+            return JsonResponse({'erro': 'Falha na verificação de segurança.'}, status=403)
+
+        cnaes_codigos = data.get('cnaes', [])
+        # Limpeza dos códigos
+        cnaes_codigos_limpos = [''.join(filter(str.isdigit, str(c))) for c in cnaes_codigos]
+
+        resultado_final = {'cnaes_processados': []}
+        
+        # Mapeamento de Risco para Ordenação e Cores
+        RISCO_MAP = {'I': 1, 'II': 2, 'III': 3}
+        RISCO_CORES = {'I': 'success', 'II': 'warning', 'III': 'danger', 'NA': 'secondary'}
+
+        for codigo in cnaes_codigos_limpos:
+            try:
+                cnae_obj = CNAE.objects.get(codigo=codigo)
+                
+                # Busca as classificações ambientais específicas
+                classificacoes = ClassificacaoAmbiental.objects.filter(cnae=cnae_obj)
+                
+                detalhes_ambientais = []
+                risco_max_cnae = 0
+                risco_texto_cnae = "NA"
+
+                if classificacoes.exists():
+                    for item in classificacoes:
+                        # Determina o maior risco entre as opções deste CNAE
+                        valor_risco = RISCO_MAP.get(item.nivel_risco, 0)
+                        if valor_risco > risco_max_cnae:
+                            risco_max_cnae = valor_risco
+                            risco_texto_cnae = item.nivel_risco
+
+                        detalhes_ambientais.append({
+                            'nivel_agregacao': item.nivel_agregacao,
+                            'dn_copam': item.codigo_dn_copam,
+                            'descricao_especifica': item.descricao_atividade,
+                            'exigencia': item.exigencia_municipal,
+                            'risco': item.nivel_risco,
+                            'cor': RISCO_CORES.get(item.nivel_risco, 'secondary')
+                        })
+                else:
+                    # Se não tem classificação específica, considera risco I ou NA conforme sua regra
+                    risco_texto_cnae = "I" # Assumindo padrão baixo risco se não listado
+                    detalhes_ambientais.append({
+                        'dn_copam': 'N/A',
+                        'descricao_especifica': 'Atividade não listada especificamente no Decreto (Regra Geral)',
+                        'exigencia': 'Não se aplica / Dispensa',
+                        'risco': 'I',
+                        'cor': 'success'
+                    })
+
+                resultado_final['cnaes_processados'].append({
+                    'codigo': cnae_obj.codigo,
+                    'codigo_formatado': formatar_cnae(cnae_obj.codigo),
+                    'descricao': cnae_obj.descricao,
+                    'itens_ambientais': detalhes_ambientais,
+                    'risco_consolidado': risco_texto_cnae,
+                    'cor_consolidada': RISCO_CORES.get(risco_texto_cnae, 'secondary')
+                })
+
+            except CNAE.DoesNotExist:
+                # CNAE não encontrado na base
+                pass
+
+        return JsonResponse(resultado_final)
+
+    except Exception as e:
+        return JsonResponse({'erro': str(e)}, status=500)
+
+def pagina_simulador_ambiental(request):
+    """Renderiza o template do Simulador Ambiental (cópia do sanitário)."""
+    return render(request, 'simulador_risco/simulador_ambiental.html', {
+        'RECAPTCHA_PUBLIC_KEY': settings.RECAPTCHA_PUBLIC_KEY
+    })

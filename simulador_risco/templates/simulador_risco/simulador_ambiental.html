@@ -1,0 +1,342 @@
+{% extends "bases.html" %}
+
+{% block title %}Simulador de Risco Ambiental - SS Paraíso{% endblock %}
+
+{% block content %}
+<div class="card shadow-lg border-0">
+    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+        <h2 class="h4 mb-0"><i class="bi bi-tree-fill me-2"></i> Simulador de Risco Ambiental - SS Paraíso</h2>
+        <button id="btnLimpar" class="btn btn-sm btn-outline-light" style="display: none;"><i class="bi bi-arrow-clockwise me-1"></i> Nova Análise</button>
+    </div>
+    <div class="card-body p-lg-4">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            <p class="card-text text-muted mb-0">Baseado no Decreto Municipal Nº 6.615/2024.</p>
+            <div class="form-check form-switch fs-5" style="display:none;">
+                <input class="form-check-input" type="checkbox" role="switch" id="meiSwitch">
+                <label class="form-check-label" for="meiSwitch"><strong>É MEI?</strong></label>
+            </div>
+        </div>
+
+        <div id="inputArea">
+            <div class="row g-3 align-items-start">
+                <div class="col-lg-6">
+                    <label for="cnpjInput" class="form-label"><strong>1. Consulte por CNPJ (Recomendado)</strong></label>
+                    <div class="input-group">
+                        <input type="text" id="cnpjInput" class="form-control" placeholder="00.000.000/0001-00" maxlength="18">
+                        <button class="btn btn-success" id="btnConsultarCnpj" type="button">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
+                            <i class="bi bi-search"></i> Consultar
+                        </button>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <label for="cnaeSearch" class="form-label"><strong>2. Ou adicione CNAEs manualmente</strong></label>
+                    <div class="input-group">
+                        <select id="cnaeSearch" class="form-select" data-placeholder="Digite 3+ caracteres do código ou descrição..."></select>
+                        <button class="btn btn-outline-success" id="btnAddCnae" type="button" title="Adicionar CNAE à análise"><i class="bi bi-plus-lg"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center my-3">
+            <small class="text-muted">
+                <i class="bi bi-shield-check me-1"></i>
+                Este site é protegido pelo reCAPTCHA e a 
+                <a href="https://policies.google.com/privacy" target="_blank">Política de Privacidade</a> e os 
+                <a href="https://policies.google.com/terms" target="_blank">Termos de Serviço</a> do Google se aplicam.
+            </small>
+        </div>
+
+        <hr class="my-4">
+
+        <div id="loading" class="text-center my-4" style="display: none;">
+            <div class="spinner-border text-success" style="width: 3rem; height: 3rem;" role="status"></div>
+            <p class="mt-2 fs-5">Consultando dados ambientais...</p>
+        </div>
+
+        <div id="resultsArea" style="display: none;">
+            <div id="empresaInfo" class="card bg-light mb-4" style="display: none;"></div>
+            
+            <h3 class="mb-3">Resultado da Análise Ambiental</h3>
+            <div id="resultadoFinal" class="alert d-flex align-items-center" role="alert">
+                <h4 class="alert-heading mb-0 me-3">Risco Geral:</h4>
+                <strong id="riscoFinalTexto" class="fs-3"></strong>
+            </div>
+            
+            <div id="cnaeListContainer" class="mb-4"></div>
+
+            <div id="adSlot1" class="text-center my-4" style="display: none; min-height: 100px;">
+               </div>
+        </div>
+        
+        <div class="alert alert-warning mt-4 small">
+            <strong>Aviso Legal:</strong> Este simulador baseia-se no Decreto Municipal 6.615. A classificação final pode variar conforme análise técnica da Secretaria de Meio Ambiente.
+            <br>
+            Para informações definitivas, <strong>procure o órgão ambiental municipal.</strong>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script src="https://www.google.com/recaptcha/api.js?render={{ RECAPTCHA_PUBLIC_KEY }}&hl=pt-BR"></script>
+
+<script>
+    const RECAPTCHA_SITE_KEY = '{{ RECAPTCHA_PUBLIC_KEY }}';
+    
+    async function getRecaptchaToken(action) {
+        try {
+            const token = await grecaptcha.execute(RECAPTCHA_SITE_KEY, { action: action });
+            return token;
+        } catch (error) {
+            console.error('Erro ao obter token reCAPTCHA:', error);
+            alert('Erro ao validar segurança. Por favor, recarregue a página.');
+            return null;
+        }
+    }
+
+    function inicializarTooltips() {
+        const oldTooltips = document.querySelectorAll('.tooltip');
+        oldTooltips.forEach(tt => tt.remove());
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const ui = {
+            cnpjInput: document.getElementById('cnpjInput'),
+            btnConsultarCnpj: document.getElementById('btnConsultarCnpj'),
+            cnaeSearch: $('#cnaeSearch'),
+            btnAddCnae: document.getElementById('btnAddCnae'),
+            btnLimpar: document.getElementById('btnLimpar'),
+            loading: document.getElementById('loading'),
+            inputArea: document.getElementById('inputArea'),
+            resultsArea: document.getElementById('resultsArea'),
+            empresaInfo: document.getElementById('empresaInfo'),
+            resultadoFinal: document.getElementById('resultadoFinal'),
+            riscoFinalTexto: document.getElementById('riscoFinalTexto'),
+            cnaeListContainer: document.getElementById('cnaeListContainer'),
+        };
+
+        let state = {
+            cnaesAnalisados: new Set(),
+            dadosCNAEs: []
+        };
+        
+        // Configuração de Riscos Ambientais
+        const CONSTS = {
+            RISCO_MAP: {'NA': 0, 'I': 1, 'II': 2, 'III': 3},
+            CORES: {0: 'secondary', 1: 'success', 2: 'warning', 3: 'danger'},
+            TITULOS: {
+                0: 'Não Classificado', 
+                1: 'Risco I (Baixo)',
+                2: 'Risco II (Médio)', 
+                3: 'Risco III (Alto)'
+            },
+            DESCRICOES: {
+                0: 'Atividade sem classificação específica encontrada.',
+                1: 'Baixo Impacto Ambiental: Geralmente dispensado ou licenciamento simplificado.',
+                2: 'Médio Impacto Ambiental: Sujeito a Licenciamento Ambiental Simplificado.',
+                3: 'Alto Impacto Ambiental: Sujeito a Licenciamento Ambiental Completo (LAC).'
+            }
+        };
+
+        // Select2 (Reaproveita a mesma API de busca de CNAE do sanitário, pois a base de códigos é a mesma)
+        ui.cnaeSearch.select2({
+            theme: 'bootstrap-5',
+            ajax: {
+                url: '{% url "simulador_risco:api_buscar_cnae" %}',
+                dataType: 'json', delay: 250, data: params => ({ termo: params.term }),
+                processResults: data => ({ results: data }), cache: true
+            },
+            minimumInputLength: 3
+        });
+
+        ui.cnpjInput.addEventListener('input', (e) => {
+            let v = e.target.value.replace(/\D/g,'').replace(/^(\d{2})(\d)/,'$1.$2').replace(/^(\d{2})\.(\d{3})(\d)/,'$1.$2.$3').replace(/\.(\d{3})(\d)/,'.$1/$2').replace(/(\d{4})(\d)/,'$1-$2');
+            e.target.value = v;
+        });
+        
+        ui.btnLimpar.addEventListener('click', resetApp);
+        ui.btnConsultarCnpj.addEventListener('click', handleCnpjSearch);
+        ui.btnAddCnae.addEventListener('click', handleAddCnae);
+        
+        function resetApp() {
+            ui.cnpjInput.value = '';
+            ui.cnaeSearch.val(null).trigger('change');
+            ui.resultsArea.style.display = 'none';
+            ui.inputArea.style.display = 'block';
+            ui.btnLimpar.style.display = 'none';
+            state.cnaesAnalisados.clear();
+            ui.cnaeListContainer.innerHTML = '';
+            ui.empresaInfo.style.display = 'none';
+        }
+
+        async function handleCnpjSearch() {
+            const cnpj = ui.cnpjInput.value.replace(/\D/g, '');
+            if (cnpj.length !== 14) { 
+                alert('Digite um CNPJ válido com 14 dígitos.'); 
+                return; 
+            }
+
+            const recaptchaToken = await getRecaptchaToken('consultar_cnpj');
+            if (!recaptchaToken) return;
+
+            toggleLoading(true, ui.btnConsultarCnpj);
+            try {
+                // Reutiliza a API de CNPJ existente, pois ela só retorna a lista de códigos CNAE
+                const response = await fetch(`/simulador-risco-ses/api/consultar-cnpj/${cnpj}/?g-recaptcha-response=${recaptchaToken}`);
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.erro || 'Falha ao consultar CNPJ.');
+                }
+                const data = await response.json();
+                renderizarInfoEmpresa(data.empresa_data);
+                const cnaes = (data.cnaes || []).filter(c => c && c !== "0").map(String);
+                state.cnaesAnalisados = new Set(cnaes);
+                await consultarCnaesAmbiental();
+            } catch (error) {
+                alert(error.message);
+                ui.resultsArea.style.display = 'none';
+            } finally {
+                toggleLoading(false, ui.btnConsultarCnpj);
+            }
+        }
+
+        function handleAddCnae() {
+            const cnaeSelecionado = ui.cnaeSearch.val();
+            if (cnaeSelecionado) {
+                state.cnaesAnalisados.add(cnaeSelecionado);
+                consultarCnaesAmbiental();
+                ui.cnaeSearch.val(null).trigger('change');
+            }
+        }
+
+        // --- NOVA FUNÇÃO: CONSULTAR API AMBIENTAL ---
+        async function consultarCnaesAmbiental() {
+            const cnaesLista = [...state.cnaesAnalisados];
+            if (cnaesLista.length === 0) return;
+
+            const recaptchaToken = await getRecaptchaToken('consultar_cnaes');
+            if (!recaptchaToken) return;
+
+            toggleLoading(true);
+            try {
+                // Chama a NOVA API AMBIENTAL
+                const response = await fetch('{% url "simulador_risco:api_consultar_cnaes_ambiental" %}', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ cnaes: cnaesLista, 'g-recaptcha-response': recaptchaToken })
+                });
+                
+                if (!response.ok) throw new Error('Falha ao analisar CNAEs.');
+                
+                const data = await response.json();
+                state.dadosCNAEs = data.cnaes_processados;
+                
+                renderizarResultadosAmbientais();
+                
+                ui.resultsArea.style.display = 'block';
+                ui.btnLimpar.style.display = 'block';
+            } catch (error) {
+                alert(error.message);
+                ui.resultsArea.style.display = 'none';
+            } finally {
+                toggleLoading(false);
+            }
+        }
+
+        function renderizarResultadosAmbientais() {
+            // Ordena por risco decrescente
+            state.dadosCNAEs.sort((a, b) => {
+                return CONSTS.RISCO_MAP[b.risco_consolidado] - CONSTS.RISCO_MAP[a.risco_consolidado];
+            });
+
+            let riscoMaxGlobal = 0;
+            let html = '<h5 class="mb-3 text-success">Detalhamento das Atividades:</h5><div class="list-group">';
+
+            state.dadosCNAEs.forEach(cnae => {
+                const riscoNum = CONSTS.RISCO_MAP[cnae.risco_consolidado] || 0;
+                if (riscoNum > riscoMaxGlobal) riscoMaxGlobal = riscoNum;
+
+                const collapseId = `collapse-${cnae.codigo}`;
+                
+                // Header do CNAE (Estilo Accordion)
+                html += `
+                <div class="list-group-item list-group-item-action" id="cnae-item-${cnae.codigo}">
+                    <div class="d-flex w-100 justify-content-between align-items-center" data-bs-toggle="collapse" href="#${collapseId}" role="button" aria-expanded="false">
+                        <div>
+                            <h6 class="mb-1 fw-bold">${cnae.codigo_formatado}</h6>
+                            <small>${cnae.descricao}</small>
+                        </div>
+                        <span class="badge bg-${cnae.cor_consolidada} rounded-pill p-2">Risco ${cnae.risco_consolidado}</span>
+                    </div>
+                    
+                    <div class="collapse show mt-2" id="${collapseId}">
+                        <div class="card card-body bg-light border-0 p-2">
+                            <table class="table table-sm table-bordered mb-0 bg-white" style="font-size: 0.85rem;">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>DN COPAM</th>
+                                        <th>Descrição Específica</th>
+                                        <th>Exigência</th>
+                                        <th>Risco</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+                                    
+                cnae.itens_ambientais.forEach(item => {
+                    html += `
+                    <tr>
+                        <td>${item.dn_copam}</td>
+                        <td>${item.descricao_especifica}</td>
+                        <td>${item.exigencia}</td>
+                        <td class="text-center"><span class="badge bg-${item.cor}">${item.risco}</span></td>
+                    </tr>`;
+                });
+
+                html += `       </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>`;
+            });
+
+            html += '</div>';
+            ui.cnaeListContainer.innerHTML = html;
+
+            // Atualiza Risco Global no topo
+            const corFinal = CONSTS.CORES[riscoMaxGlobal];
+            const tituloFinal = CONSTS.TITULOS[riscoMaxGlobal];
+            const descFinal = CONSTS.DESCRICOES[riscoMaxGlobal];
+            
+            ui.resultadoFinal.className = `alert alert-${corFinal} d-flex align-items-center shadow-sm`;
+            ui.riscoFinalTexto.innerHTML = `${tituloFinal} <i class="bi bi-info-circle-fill ms-2" data-bs-toggle="tooltip" title="${descFinal}"></i>`;
+            
+            inicializarTooltips();
+        }
+        
+        function toggleLoading(isLoading, button = null) {
+            ui.loading.style.display = isLoading ? 'block' : 'none';
+            if (isLoading) { ui.resultsArea.style.display = 'none'; }
+            if(button) {
+                button.disabled = isLoading;
+                const spinner = button.querySelector('.spinner-border');
+                if (spinner) spinner.style.display = isLoading ? 'inline-block' : 'none';
+            }
+        }
+        
+        function renderizarInfoEmpresa(data) {
+            if (!data || !data.razao_social) { ui.empresaInfo.style.display = 'none'; return; }
+            ui.empresaInfo.innerHTML = `<div class="card-body"><h5 class="card-title">${data.razao_social}</h5><p class="card-text mb-1"><strong>Nome Fantasia:</strong> ${data.nome_fantasia || 'N/A'}</p><p class="card-text"><strong>Situação:</strong> ${data.situacao_cadastral}</p></div>`;
+            ui.empresaInfo.style.display = 'block';
+        }
+    });
+</script>
+{% endblock %}

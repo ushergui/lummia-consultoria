@@ -29,3 +29,31 @@ class CNAE(models.Model):
 
     def __str__(self):
         return f"{self.codigo} - {self.risco_base}"
+    
+class ClassificacaoAmbiental(models.Model):
+    """
+    Tabela específica para o Decreto Municipal nº 6615 (Ambiental).
+    Um único CNAE pode ter várias entradas aqui se tiver diferentes
+    códigos DN COPAM ou especificidades.
+    """
+    cnae = models.ForeignKey(CNAE, on_delete=models.CASCADE, related_name='classificacoes_ambientais')
+    
+    # Coluna: NÍVEL AGREGAÇÃO CNAE (Atividade ou Subclasse)
+    nivel_agregacao = models.CharField(max_length=50, blank=True, null=True)
+    
+    # Coluna: CÓDIGO DN COPAM (Ex: G-03-04-2, ou 'Não Listada')
+    codigo_dn_copam = models.CharField(max_length=50, blank=True, null=True)
+    
+    # Coluna: DESCRIÇÃO DO CÓDIGO (Descrição específica da atividade ambiental)
+    # Diferente da descrição padrão do IBGE que está no model CNAE
+    descricao_atividade = models.TextField(verbose_name="Descrição da Atividade Ambiental")
+    
+    # Coluna: EXIGÊNCIA AMBIENTAL MUNICIPAL (Ex: Licença Ambiental, Dispensa, Não se aplica)
+    exigencia_municipal = models.CharField(max_length=255, blank=True, null=True)
+    
+    # Coluna: NÍVEL DE RISCO (Ex: I, II, III)
+    nivel_risco = models.CharField(max_length=20, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.cnae.codigo} - {self.codigo_dn_copam} ({self.nivel_risco})"
+    
