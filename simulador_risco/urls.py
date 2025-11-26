@@ -10,4 +10,6 @@ urlpatterns = [
     path('api/buscar-cnae/', views.api_buscar_cnae, name='api_buscar_cnae'),
     path('simulador-ambiental-ssparaiso/', views.pagina_simulador_ambiental, name='simulador_ambiental'),
     path('semam/', views.pagina_simulador_ambiental, name='simulador_ambiental'),
+    path('api/consultar-cnaes-ambiental/', views.api_consultar_cnaes_ambiental, name='api_consultar_cnaes_ambiental'),
+
 ]
